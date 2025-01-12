@@ -1,0 +1,34 @@
+{
+  "name": "minecraft-assistants",
+  "version": "1.0.0",
+  "description": "Minecraft bots that can do some of your routine work for you.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dtkdtk/minecraft-assistants.git"
+  },
+  "keywords": [
+    "minecraft",
+    "bot"
+  ],
+  "author": "Demyan 'dtkdtk0' Tk.",
+  "contributors": [
+    "Valinok37"
+  ],
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dtkdtk/minecraft-assistants/issues"
+  },
+  "homepage": "https://github.com/dtkdtk/minecraft-assistants#readme",
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "mineflayer": "^4.25.0",
+    "mineflayer-pathfinder": "^2.4.5"
+  }
+}
