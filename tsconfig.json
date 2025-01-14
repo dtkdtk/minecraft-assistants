@@ -11,7 +11,7 @@
     "noCheck": false,
     "allowJs": true,
     "checkJs": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
 
     "strict": false,
     "strictNullChecks": true,
@@ -23,6 +23,7 @@
     "resolveJsonModule": true,
     "module": "NodeNext",
     "moduleResolution": "nodenext",
-    "lib": ["ESNext"]
+    "lib": ["ESNext"],
+    "types": ["./types.d.ts"]
   }
 }

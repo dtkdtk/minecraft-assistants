@@ -1,12 +1,14 @@
-import * as mineflayer from "mineflayer";
+import * as mf from "mineflayer";
+import initModules from "./init-modules.js";
 
 //Здесь будет происходить инициализация бота на готовых параметрах.
 //Параметры получаются из 'cli.js' или (в будущем) каких-то иных источников.
 //Сделано, чтобы бота можно было запускать разными способами (в будущем).
 
 /**
- * @param {import("./main").GeneralOptions} options 
+ * @param {GeneralBotOptions} options 
  */
-export async function createBotInstance(options) {
-  const bot = mineflayer.createBot({ ...options, ...options._mfClientOptionsOverrides });
+export default function createMinecraftAssistantBot(options) {
+  const bot = mf.createBot({ ...options, ...options._mfClientOptionsOverrides });
+  initModules(bot);
 }
