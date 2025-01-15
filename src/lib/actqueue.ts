@@ -13,7 +13,7 @@ class _ActionQueue
     this.#cooldownMs = cooldownMs;
   }
 
-  push(action)
+  push(action: SomeFunction)
   {
     this.#queue.push(action);
     if (this.#timeout == null) this.#execChainedAction();

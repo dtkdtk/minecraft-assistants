@@ -1,12 +1,10 @@
-import * as mf from "mineflayer";
-
 export default class Mod_ChatCommands {
 
   constructor(bot: Bot) {
-    bot.on("chat", (...args) => this.handleMessage(...args));
+    bot.on("chat", this.handleMessage.bind(this));
   }
 
-  handleMessage: BotEvents["chat"] = async function(username, message, translate, jsonMsg, matches) {
+  async handleMessage(username: string, message: string) {
     console.log(`Получил сообщение: <${username}> ${message}`);
   }
 }

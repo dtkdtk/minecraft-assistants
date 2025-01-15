@@ -16,32 +16,27 @@ class DurationBuilder {
     return this.holds;
   }
  
-  /** @param {number} count */
-  ms(count) {
+  ms(count: number) {
     this.holds += count;
     return this;
   }
  
-  /** @param {number} count */
-  sec(count) {
+  sec(count: number) {
     this.holds += count * 1000;
     return this;
   }
  
-  /** @param {number} count */
-  min(count) {
+  min(count: number) {
     this.holds += count * 1000 * 60;
     return this;
   }
  
-  /** @param {number} count */
-  hr(count) {
+  hr(count: number) {
     this.holds += count * 1000 * 60 * 60;
     return this;
   }
  
-  /** @param {number} count */
-  day(count) {
+  day(count: number) {
     this.holds += count * 1000 * 60 * 60 * 24;
     return this;
   }
