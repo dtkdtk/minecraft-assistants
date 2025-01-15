@@ -1,13 +1,10 @@
-
-type Action = () => unknown;
-
-const _EverySecondActions = new Set<Action>();
+const _EverySecondActions = new Set<SomeFunction>();
 
 /**
  * Выполняет указанное действие каждую секунду.
  * Выполнение действия можно отменить с помощью функции {@link removeEverySecondAction()}.
  */
-export function everySecond(action: Action) {
+export function everySecond(action: SomeFunction) {
   _EverySecondActions.add(action);
 }
 
@@ -17,7 +14,7 @@ export function everySecond(action: Action) {
  * (ту же ссылку).
  * @returns удалось ли удалить?
  */
-export function removeEverySecondAction(action: Action): boolean {
+export function removeEverySecondAction(action: SomeFunction): boolean {
   return _EverySecondActions.delete(action);
 }
 

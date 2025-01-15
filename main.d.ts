@@ -1,1 +1,1 @@
-export default function createMinecraftAssistantBot(options: GeneralBotOptions): void;
+export function createMinecraftAssistantBot(options: GeneralBotOptions): void;

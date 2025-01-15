@@ -1,4 +1,4 @@
-import createMinecraftAssistantBot from "../main.js";
+import { createMinecraftAssistantBot } from "../main.js";
 import testBotCfg from "./test-bot-cfg.js";
 
 /*

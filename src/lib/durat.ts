@@ -5,9 +5,6 @@ declare global {
    */
   export function Durat(): DurationBuilder;
 }
-globalThis.Durat = function() {
-  return new DurationBuilder();
-}
 
 /** @internal */
 class DurationBuilder {
@@ -49,3 +46,9 @@ class DurationBuilder {
     return this;
   }
 }
+
+Object.defineProperty(global, "Durat", {
+  value: function() {
+    return new DurationBuilder();
+  }
+});
