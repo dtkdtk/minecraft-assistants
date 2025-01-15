@@ -25,10 +25,12 @@
   },
   "homepage": "https://github.com/dtkdtk/minecraft-assistants#readme",
   "devDependencies": {
+    "@types/node": "^22.10.6",
     "typescript": "^5.7.3"
   },
   "dependencies": {
     "mineflayer": "^4.25.0",
-    "mineflayer-pathfinder": "^2.4.5"
+    "mineflayer-pathfinder": "^2.4.5",
+    "typed-emitter": "^2.1.0"
   }
 }
