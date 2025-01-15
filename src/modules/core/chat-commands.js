@@ -5,7 +5,7 @@ export default class Mod_ChatCommands {
   /**
    * @param {Bot} bot 
    */
-  constructor(bot) {
+  constructor (bot) {
     bot.on("chat", (...args) => this.handleMessage(...args));
   }
 
