@@ -26,6 +26,6 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "lib": ["ESNext"],
-    "types": ["./types.d.ts"]
+    "types": ["./src/types.d.ts"]
   }
 }
