@@ -1,13 +1,11 @@
 import * as mf from "mineflayer";
-import { EventEmitter } from "events";
 
-export default class Mod_ChatCommands extends EventEmitter{
+export default class Mod_ChatCommands {
 
   /**
    * @param {Bot} bot 
    */
-  constructor(bot) {
-    super()
+  constructor (bot) {
     bot.on("chat", (...args) => this.handleMessage(...args));
   }
 
@@ -16,8 +14,5 @@ export default class Mod_ChatCommands extends EventEmitter{
    */
   async handleMessage(username, message, translate, jsonMsg, matches) {
     console.log(`Получил сообщение: <${username}> ${message}`);
-
-    this.emit("Got_command", { username, message });
-
   }
 }
