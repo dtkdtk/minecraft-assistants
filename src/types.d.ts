@@ -14,6 +14,7 @@ declare global {
   export type Bot = mf.Bot;
   export type BotEvents = mf.BotEvents;
 
+  export type Assert<Got, Needed> = Got extends Needed ? Got : never;
   export type SomeFunction = () => unknown;
 }
 

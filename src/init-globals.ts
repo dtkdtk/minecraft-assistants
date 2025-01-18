@@ -6,3 +6,8 @@
 import "./lib/actqueue.js";
 import "./lib/durat.js";
 import "./lib/fat-ticks.js";
+import "./lib/typed-emitter.js";
+
+declare global {
+  
+}
