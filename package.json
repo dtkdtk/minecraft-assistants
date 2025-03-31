@@ -26,10 +26,13 @@
   "homepage": "https://github.com/dtkdtk/minecraft-assistants#readme",
   "devDependencies": {
     "@types/node": "^22.10.6",
+    "prismarine-viewer": "^1.29.0",
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "minecraft-data": "^3.83.1",
     "mineflayer": "^4.25.0",
-    "mineflayer-pathfinder": "^2.4.5"
+    "mineflayer-pathfinder": "^2.4.5",
+    "prismarine-item": "^1.16.0"
   }
 }
