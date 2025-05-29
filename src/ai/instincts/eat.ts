@@ -2,44 +2,73 @@ import mcdata from "minecraft-data";
 import { Item } from "prismarine-item";
 import type Brain from "../brain.js";
 
-const MIN_SATURATION = 12;
+const CHECK_INTERVAL = Durat().sec(3).done;
+const MIN_SATURATION = 17;
 const EXTREME_SATURATION = 6;
 const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"];
 
-export default class Mod_Eat extends TypedEventEmitter<_Events> {
+export default class Mod_Eat {
+  private timer: NodeJS.Timeout | undefined;
+
   constructor(private readonly B: Brain) {
-    super();
     B.bot.once("spawn", this.whenBotSpawn.bind(this));
   }
 
   whenBotSpawn() {
-    //every30Seconds(this.checkSaturation.bind(this));
+    this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
   }
 
-  whenHungry(extreme: boolean) {
+  /** Возвращает успех/неудачу */
+  async whenHungry(extreme: boolean): Promise<boolean> {
     /* Ищем еду в инвентаре. Находим - едим.
       Не нашли - сообщаем Мозгу. */
     const food = this.findFood();
-    if (!food)
-      return this.emit(extreme ? "extremelyNeedsFood" : "needsFood");
+    if (!food) {
+      //TODO: find food
+      this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.foodSaturation}`);
+      return false;
+    }
     this.B.bot.equip(food, "hand");
-    this.activateFoodItem();
+    await this.activateFoodItem();
+    this.B.bot.unequip("hand");
+    
+    //Может, нам нужно ещё поесть?
+    if (this.checkSaturation() != 0) return await this.whenHungry(false);
+    return true;
   }
   activateFoodItem() {
-    this.B.bot.activateItem();
-    const eatingItem = this.B.bot.heldItem;
-    this.B.bot.inventory.on("updateSlot", (slot, oldItem, newItem) => {
-      if (slot === eatingItem?.slot && newItem?.type === eatingItem.type) {
-        this.B.bot.deactivateItem();
-      }
-    })
+    return new Promise<void>((pReturn, pThrow) => {
+      const handler = (slot: number, oldItem: Item | null, newItem: Item | null) => {
+        if (slot === eatingItem?.slot && newItem?.type === eatingItem.type) {
+          this.B.bot.deactivateItem();
+          this.B.bot.inventory.off("updateSlot" as never, handler);
+          pReturn();
+        }
+      };
+      this.B.bot.activateItem();
+      const eatingItem = this.B.bot.heldItem;
+      this.B.bot.inventory.on("updateSlot" as never, handler);
+    });
   }
 
-  checkSaturation() {
-    if ((this.B.bot.entity.food ?? 20) <= EXTREME_SATURATION)
-      return this.whenHungry(true);
-    if ((this.B.bot.entity.food ?? 20) <= MIN_SATURATION)
-      return this.whenHungry(false);
+  update() {
+    const saturationCode = this.checkSaturation();
+    if (!saturationCode) return;
+    this.B.addJob({
+      createdAt: Date.now(),
+      priority: saturationCode == 2 ? JobPriority.ForceInterrupt : JobPriority.SoftInterrupt,
+      validate: () => Boolean(this.checkSaturation()),
+      execute: async () => await this.whenHungry(saturationCode == 2),
+    });
+  }
+
+  /** `2` = сильное голодание, `1` = голодание, `0` = всё ОК */
+  checkSaturation(): 2 | 1 | 0 {
+    if (this.B.bot.foodSaturation <= EXTREME_SATURATION)
+      return 2;
+    if (this.B.bot.foodSaturation <= MIN_SATURATION)
+      return 1;
+    return 0;
   }
 
   /**
@@ -57,12 +86,4 @@ export default class Mod_Eat extends TypedEventEmitter<_Events> {
     }
     return currentBestChoice;
   }
-}
-
-interface _Events {
-  /** Пусть Мозг ищет еду */
-  needsFood: () => void;
-  
-  /** Пусть Мозг БРОСАЕТ ВСЕ ДЕЛА и ищет еду */
-  extremelyNeedsFood: () => void;
 }
