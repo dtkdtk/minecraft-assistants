@@ -1,4 +1,5 @@
 //Source: https://www.npmjs.com/package/typed-emitter
+import EventEmitter from "node:events";
 
 type _ListenerFn<Events extends object, E extends keyof Events> =
   Assert<Events[E], (...params: any[]) => any>;
@@ -26,6 +27,6 @@ declare global {
   }
 }
 
-Object.defineProperty(global, "EventEmitter", {
-  value: (await import("node:events")).EventEmitter
+Object.defineProperty(global, "TypedEventEmitter", {
+  value: EventEmitter
 });
