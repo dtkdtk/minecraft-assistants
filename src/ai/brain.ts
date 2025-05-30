@@ -25,25 +25,14 @@ export default class Brain {
     else return J;
   }
   addJob(J: Job) {
-    //прерывание => нет необходимости добавлять в очередь задач.
-    if (J.priority == JobPriority.ForceInterrupt) {
-      this.interruptJobExecution = true;
-      J.prepare?.();
-      J.execute();
-      J.finalize?.();
-    }
-    else if (J.priority == JobPriority.SoftInterrupt) {
-      this.interruptJobExecution = true;
-      this.currentJobUnit()?.finalize?.();
-      J.prepare?.();
-      J.execute();
-      J.finalize?.();
+    if (isInterruption(J)) {
+      this.handleJobInterruption(J).then(() => this.startJobExecution());
     }
     else {
       this.jobs.push(J);
       this.sortJobsQueue();
+      this.startJobExecution();
     }
-    this.startJobExecution();
   }
 
   private sortJobsQueue() {
@@ -61,27 +50,52 @@ export default class Brain {
     while (this.jobs.length > 0) {
       const J = this.currentJob()!;
       await this.invokeJob(J).catch(error => this.handleJobInvocationError(error));
+      this.jobs.shift();
       if (this.interruptJobExecution) break;
     }
     this.interruptJobExecution = false;
   }
   private async invokeJob(J: JobUnit) {
-    if (this.interruptJobExecution) return;
+    if (this.interruptJobExecution && !isInterruption(J)) return;
     if (J.validate) {
       const isActual = await J.validate();
       if (!isActual) return;
     }
     
-    if (this.interruptJobExecution) return;
+    if (this.interruptJobExecution && !isInterruption(J)) return;
     if (J.prepare) await J.prepare();
     
-    if (this.interruptJobExecution) return;
+    if (this.interruptJobExecution && !isInterruption(J)) return;
     await J.execute();
     
-    if (this.interruptJobExecution) return;
+    if (this.interruptJobExecution && !isInterruption(J)) return;
     if (J.finalize) await J.finalize();
   }
   private handleJobInvocationError(error: Error) {
     console.error("Job invocation error:\n", error);
   }
+
+  /**
+   * @param J прерывающая задача
+   */
+  private async handleJobInterruption(J: Job) {
+    if (J.priority == JobPriority.ForceInterrupt) {
+      this.interruptJobExecution = true;
+      this.jobs.unshift(J);
+      await this.invokeJob(J);
+      this.jobs.shift();
+    }
+    else if (J.priority == JobPriority.SoftInterrupt) {
+      this.interruptJobExecution = true;
+      const currentJob = this.currentJobUnit();
+      this.jobs.unshift(J);
+      await currentJob?.finalize?.();
+      await this.invokeJob(J);
+      this.jobs.shift();
+    }
+  }
+}
+
+function isInterruption(J: Job): boolean {
+  return J.priority == JobPriority.ForceInterrupt || J.priority == JobPriority.SoftInterrupt;
 }

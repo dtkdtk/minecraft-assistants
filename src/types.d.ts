@@ -24,6 +24,7 @@ declare global {
    * Единица работы.
    */
   export interface JobUnit {
+    jobDisplayName: string;
     createdAt: number;
     /** Приоритет задачи. Больше = приоритетнее. */
     priority: JobPriority;

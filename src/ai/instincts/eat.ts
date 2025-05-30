@@ -3,15 +3,19 @@ import { Item } from "prismarine-item";
 import type Brain from "../brain.js";
 
 const CHECK_INTERVAL = Durat().sec(3).done;
-const MIN_SATURATION = 17;
+const REGENERATION_MIN_HEALTH = 16;
+const REGENERATION_MIN_FOOD = 19;
+const MIN_SATURATION = 14;
 const EXTREME_SATURATION = 6;
 const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"];
 
 export default class Mod_Eat {
   private timer: NodeJS.Timeout | undefined;
+  private _lastHungryMessage: number = 0;
 
   constructor(private readonly B: Brain) {
-    B.bot.once("spawn", this.whenBotSpawn.bind(this));
+    if (B.bot.entity) this.whenBotSpawn();
+    else B.bot.once("spawn", this.whenBotSpawn.bind(this));
   }
 
   whenBotSpawn() {
@@ -25,7 +29,10 @@ export default class Mod_Eat {
     const food = this.findFood();
     if (!food) {
       //TODO: find food
-      this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.foodSaturation}`);
+      if (this._lastHungryMessage + Durat().min(3).done < Date.now()) {
+        this._lastHungryMessage = Date.now();
+        this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.food}`);
+      }
       return false;
     }
     this.B.bot.equip(food, "hand");
@@ -55,6 +62,7 @@ export default class Mod_Eat {
     const saturationCode = this.checkSaturation();
     if (!saturationCode) return;
     this.B.addJob({
+      jobDisplayName: saturationCode == 2 ? "Eating food (EXTREME HUNGER)" : "Eating food",
       createdAt: Date.now(),
       priority: saturationCode == 2 ? JobPriority.ForceInterrupt : JobPriority.SoftInterrupt,
       validate: () => Boolean(this.checkSaturation()),
@@ -64,9 +72,11 @@ export default class Mod_Eat {
 
   /** `2` = сильное голодание, `1` = голодание, `0` = всё ОК */
   checkSaturation(): 2 | 1 | 0 {
-    if (this.B.bot.foodSaturation <= EXTREME_SATURATION)
+    if (this.B.bot.food <= EXTREME_SATURATION)
       return 2;
-    if (this.B.bot.foodSaturation <= MIN_SATURATION)
+    if (this.B.bot.food <= MIN_SATURATION)
+      return 1;
+    if (this.B.bot.health <= REGENERATION_MIN_HEALTH && this.B.bot.food <= REGENERATION_MIN_FOOD)
       return 1;
     return 0;
   }
