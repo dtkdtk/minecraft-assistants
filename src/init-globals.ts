@@ -39,7 +39,7 @@ declare global {
   export function isAggregateJob(job: Job | undefined | null): job is AggregateJob;
   export const DB: Readonly<{
     common: Datastore,
-    warps: Datastore,
+    locations: Datastore,
   }>;
   export const JobPriority: typeof _JobPriority;
   export type JobPriority = _JobPriority;
