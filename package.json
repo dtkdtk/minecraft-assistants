@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsc --watch",
-    "test": "node ./test/test-bot.js"
+    "test": "cd ./test; node ./test-bot.js"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@seald-io/nedb": "^4.1.1",
     "minecraft-data": "^3.83.1",
     "mineflayer": "4.3",
     "mineflayer-pathfinder": "^2.4.5",

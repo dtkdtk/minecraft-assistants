@@ -50,19 +50,37 @@ declare global {
     jobs: JobUnit[];
   }
   export type Job = JobUnit | AggregateJob;
-  /** Больше приоритет = лучше. */
-  export enum JobPriority {
-    /** При полном отсутствии задач у бота. Выполняется обычно в выходные. */
-    Whenever = 1,
-    /** В свободное время (перерыв на обед / вечернее время). */
-    FreeTime = 2,
-    /** Обычная работа, трудовая обязанность. */
-    Plain = 3,
-    //4-й приоритет зарезервирован
-    /** Прервать текущую минимальную единицу работы и заняться задачей. */
-    SoftInterrupt = 5,
-    /** БРОСИТЬ ВСЕ ДЕЛА и СРОЧНО бежать выполнять задачу. */
-    ForceInterrupt = 6
+
+  /** Точка в мире. */
+  export interface LocationPoint {
+    /** Системное имя точки. */
+    key: string;
+    type: LocationType.Point;
+    x: number;
+    y: number;
+    z: number;
+  }
+  /** Прямоугольный (двумерный) регион (без Y). */
+  export interface LocationArea {
+    /** Системное имя точки. */
+    key: string;
+    type: LocationType.Area;
+    x1: number;
+    z1: number;
+    x2: number;
+    z2: number;
+  }
+  /** Кубический (трёхмерный) регион. */
+  export interface LocationRegion {
+    /** Системное имя точки. */
+    key: string;
+    type: LocationType.Area;
+    x1: number;
+    y1: number;
+    z1: number;
+    x2: number;
+    y2: number;
+    z2: number;
   }
 }
 

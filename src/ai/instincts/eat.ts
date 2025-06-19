@@ -14,7 +14,7 @@ export default class Mod_Eat {
   private _lastHungryMessage: number = 0;
 
   constructor(private readonly B: Brain) {
-    if (B.bot.entity) this.whenBotSpawn();
+    if (B.bot.entity !== undefined) this.whenBotSpawn();
     else B.bot.once("spawn", this.whenBotSpawn.bind(this));
   }
 
