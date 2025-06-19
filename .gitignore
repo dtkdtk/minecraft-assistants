@@ -132,3 +132,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# phcode
+.phcode.json
+
+# vscode
+.vscode/
