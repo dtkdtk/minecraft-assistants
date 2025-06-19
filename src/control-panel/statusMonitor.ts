@@ -1,5 +1,5 @@
 import { Console } from "console";
-import Brain from "./ai/brain.js";
+import Brain from "../ai/brain.js";
 import { Transform } from "stream";
 
 export interface StatusMonitor {

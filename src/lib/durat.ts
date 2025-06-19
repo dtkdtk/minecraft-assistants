@@ -2,17 +2,17 @@ declare global {
   /**
    * Конвертирует "человеческое" время в "машинное" - часы, минуты, секунды в миллисекунды.
    * Создано чтобы не путаться с умножениями.
+   * 
+   * Используется как пространство имён; каждый раз создаётся новый объект.
+   * Чтобы превратить в миллисекунды, используйте унарный плюс: `+Durat.sec(30)`
    */
-  export function Durat(): DurationBuilder;
+  export const Durat: DurationBuilder;
 }
 
 /** @internal */
 class DurationBuilder {
   holds = 0;
   [Symbol.toPrimitive]() {
-    return this.holds;
-  }
-  get done() {
     return this.holds;
   }
  
@@ -43,7 +43,7 @@ class DurationBuilder {
 }
 
 Object.defineProperty(global, "Durat", {
-  value: function() {
+  get: function() {
     return new DurationBuilder();
   }
 });

@@ -1,2 +1,2 @@
-node ./test/test-bot.js
+node ./test-bot.js
 @pause

@@ -6,8 +6,8 @@ import "./lib/actqueue.js";
 import "./lib/durat.js";
 import "./lib/typed-emitter.js";
 import { default as Nedb } from "@seald-io/nedb";
-type Datastore = typeof Nedb.default;
-const Datastore = Nedb as unknown as Datastore;
+type Datastore = Nedb.default;
+const Datastore = Nedb as unknown as typeof Nedb.default;
 
 /** Больше приоритет = лучше. */
 enum _JobPriority {
@@ -35,11 +35,11 @@ enum _LocationType {
 }
 
 declare global {
-  export function debug(message: string): void;
+  export function debugLog(message: string): void;
   export function isAggregateJob(job: Job | undefined | null): job is AggregateJob;
   export const DB: Readonly<{
     common: Datastore,
-    warps: Datastore,
+    locations: Datastore,
   }>;
   export const JobPriority: typeof _JobPriority;
   export type JobPriority = _JobPriority;
@@ -50,10 +50,8 @@ declare global {
 Object.defineProperties(global, {
   JobPriority:  { value: _JobPriority },
   LocationType: { value: _LocationType },
-  debug: {
-    value: function(message: string) {
-      console.debug(message);
-    }
+  debugLog: {
+    value: undefined
   },
   isAggregateJob: {
     value: function(job: Job): job is AggregateJob {
@@ -63,8 +61,8 @@ Object.defineProperties(global, {
   DB: {
     value: {
       /* Путь отсчитывается относительно CWD (Current Working Directory), а не файла 'configStore.ts' */
-      common: new Datastore("./data/common.db"),
-      locations: new Datastore("./data/locations.db"),
+      common: new Datastore({ filename: "./data/common.db", autoload: true }),
+      locations: new Datastore({ filename: "./data/locations.db", autoload: true }),
     }
   }
 });
