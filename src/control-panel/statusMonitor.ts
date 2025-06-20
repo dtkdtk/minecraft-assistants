@@ -89,7 +89,7 @@ export function getData(B: Brain) {
     health: B.bot.health,
     food: B.bot.food,
     inventory,
-    jobsDisplay: _displayJobs(B.getJobs(), undefined)
+    jobsDisplay: _displayJobs(B.jobs, undefined)
   };
 }
 

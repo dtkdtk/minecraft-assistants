@@ -21,12 +21,8 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   i_Eat;
   i_Sleep;
   warningsQueue: string[] = [];
+  jobs: Job[] = [];
 
-  private readonly jobs: Job[] = [];
-
-  getJobs(): readonly Job[] {
-    return this.jobs;
-  }
   currentJob(): Job | undefined {
     return this.jobs[0];
   }
@@ -62,6 +58,7 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   warn(message: string) {
     this.warningsQueue.push(message);
     this.emit("newWarning", message);
+    console.warn(message);
   }
 
   private sortJobsQueue() {

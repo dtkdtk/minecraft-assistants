@@ -36,6 +36,6 @@ export async function createMinecraftAssistantBot(inputOptions: GeneralBotOption
 
 function initDebugFn(enableDebug: boolean) {
   global.debugLog = enableDebug
-  ? (message: string) => console.debug(message)
-  : () => {};
+    ? (message: string) => console.debug(message)
+    : () => {};
 }

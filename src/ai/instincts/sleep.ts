@@ -7,7 +7,8 @@ const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Sleep";
 
-const CHECK_INTERVAL = +Durat.sec(10);
+const NIGHT_CHECK_INTERVAL = +Durat.sec(10);
+const DAY_CHECK_INTERVAL = +Durat.sec(1);
 const NIGHT_TIME = 12542; /* Magic constant (minecraft ticks) */
 const kLocationBed = "bed";
 const kJobSleep = Symbol("job:sleep");
@@ -24,7 +25,7 @@ export default class Mod_Sleep {
   
   async whenBotSpawn() {
     await this.loadDatabaseDefaults();
-    this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
+    this.timer = setInterval(() => this.update(), NIGHT_CHECK_INTERVAL);
   }
   
   update() {
@@ -48,17 +49,30 @@ export default class Mod_Sleep {
     const bedPoint = await this.getBedLocation();
     if (bedPoint === null) return false;
     const movements = new Movements(this.B.bot); /* TODO: 'movements.canDig' & other options configuration */
+    movements.canDig = false;
+    movements.canOpenDoors = true;
     const goal = new goals.GoalNear(bedPoint.x, bedPoint.y, bedPoint.z, 1);
     this.B.bot.pathfinder.setMovements(movements);
     debugLog(`Going to bed at ${stringifyCoordinates(bedPoint)}`);
     await this.B.bot.pathfinder.goto(goal);
 
+    /* TODO: Relocate (заново найти) кровать если блок отсутствует.
+      Поиск будет по команде / по настройке. */
     const block = this.B.bot.blockAt(new Vec3(bedPoint.x, bedPoint.y, bedPoint.z));
     if (block === null) {
       this.B.warn(`[${MODULE_NAME}] Cannot find bed block at ${stringifyCoordinates(bedPoint)}.`);
       return false;
     }
-    await this.B.bot.activateBlock(block);
+    if (!this.B.bot.isABed(block)) {
+      this.B.warn(`[${MODULE_NAME}] Block at ${stringifyCoordinates(bedPoint)} is not a bed.`);
+      return false;
+    }
+    await this.B.bot.sleep(block);
+    await Promise.all([
+      new Promise<void>((pReturn) => {
+        setInterval(() => this.checkTime() ? undefined : pReturn(), DAY_CHECK_INTERVAL);
+      })
+    ]);
     return true;
   }
   
