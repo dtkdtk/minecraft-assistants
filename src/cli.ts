@@ -18,7 +18,7 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
           console.log(`COMMAND LIST:`);
           console.log(` help :: Display command list & info`);
           console.log(` stat :: (alias: mon) Open live status monitor`);
-          console.log(` quit :: Stop the bot and close this window`);
+          console.log(` quit :: (alias: exit) Stop the bot and close this window`);
           return sendPrompt();
         }
         case "mon":
@@ -27,8 +27,10 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
           sendWelcomeMessage(brain);
           return sendPrompt();
         }
+        case "exit":
         case "quit": {
-          process.exit(0);
+          brain.exitProcess();
+          return;
         }
         default: {
           console.log("Unknown command. Type 'help' to get command list");
@@ -46,5 +48,5 @@ function sendWelcomeMessage(brain: Brain) {
   console.log(`Welcome to '${brain.bot.player.displayName}' assistant control panel`);
   console.log(`Type 'help' to get full command list & info`);
   console.log(`Type 'stat' or 'mon' to open live status monitor`);
-  console.log(`Type 'quit' to stop the bot and close this window`);
+  console.log(`Type 'quit' or 'exit' to stop the bot and close this window`);
 }

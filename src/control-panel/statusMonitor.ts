@@ -1,6 +1,7 @@
 import { Console } from "console";
-import Brain from "../ai/brain.js";
 import { Transform } from "stream";
+import Brain from "../ai/brain.js";
+import type { Job } from "../types.js";
 
 export interface StatusMonitor {
   originalConsole: Console;

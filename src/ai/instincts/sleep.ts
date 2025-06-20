@@ -1,10 +1,20 @@
+import _mfPathfinder from "mineflayer-pathfinder";
+import { JobPriority, LocationPoint, LocationType } from "../../types.js";
 import type Brain from "../brain.js";
+import assert from "assert";
+import { Vec3 } from "vec3";
+const { Movements, goals } = _mfPathfinder;
 
-const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
-const CHECK_INTERVAL = Durat().sec(10).done;
-const NIGHT_TIME = 12517
+const MODULE_NAME = "Mod_Sleep";
 
-export default class Mod_sleep {
+const CHECK_INTERVAL = +Durat.sec(10);
+const NIGHT_TIME = 12542; /* Magic constant (minecraft ticks) */
+const kLocationBed = "bed";
+const kJobSleep = Symbol("job:sleep");
+
+/* TODO: Аппроксимация времени на путь; движение заранее */
+
+export default class Mod_Sleep {
   private timer: NodeJS.Timeout | undefined
   
   constructor(private readonly B: Brain) {
@@ -12,36 +22,64 @@ export default class Mod_sleep {
     else B.bot.once("spawn", this.whenBotSpawn.bind(this));
   }
   
-  whenBotSpawn() {
+  async whenBotSpawn() {
+    await this.loadDatabaseDefaults();
     this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
   }
   
   update() {
     if (!this.checkTime()) return;
     this.B.addJob({
-      jobDisplayName: "Going to sleep (баю-баюшки)",
+      jobIdentifier: kJobSleep,
+      jobDisplayName: "Going to sleep",
       createdAt: Date.now(),
       priority: JobPriority.Foreground,
       validate: () => this.checkTime(),
-      execute: async () => await this.whenNight(),
+      execute: () => this.whenNight(),
     })
   }
   
   checkTime(): boolean {
-    return this.B.bot.time > NIGHT_TIME
+    return this.B.bot.time.timeOfDay > NIGHT_TIME;
   }
   
-  whenNight() {
-    const [goal, movements] = this.getLocation();
-    this.B.pathfinder.setMovements(movements);
-    this.B.pathfinder.setGoal(goal);
-    bot.useOn(goal);
+  /** Возвращает успех/неудачу */
+  async whenNight(): Promise<boolean> {
+    const bedPoint = await this.getBedLocation();
+    if (bedPoint === null) return false;
+    const movements = new Movements(this.B.bot); /* TODO: 'movements.canDig' & other options configuration */
+    const goal = new goals.GoalNear(bedPoint.x, bedPoint.y, bedPoint.z, 1);
+    this.B.bot.pathfinder.setMovements(movements);
+    debugLog(`Going to bed at ${stringifyCoordinates(bedPoint)}`);
+    await this.B.bot.pathfinder.goto(goal);
+
+    const block = this.B.bot.blockAt(new Vec3(bedPoint.x, bedPoint.y, bedPoint.z));
+    if (block === null) {
+      this.B.warn(`[${MODULE_NAME}] Cannot find bed block at ${stringifyCoordinates(bedPoint)}.`);
+      return false;
+    }
+    await this.B.bot.activateBlock(block);
+    return true;
   }
   
-  getLocation() {
-    const mcData = require('minecraft-data')(B.version);
-    const movements = new Movements(B, mcData);
-    const goal = new goals.GoalNear(BD.locations.Sleep_Mod.bed, 1);
-    return [goal, movements]
+  async getBedLocation(): Promise<LocationPoint | null> {
+    const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
+    assert(locationsStore !== null);
+    const bedPoint = locationsStore.locations.find(loc => loc.key == kLocationBed);
+    if (bedPoint === undefined) {
+      this.B.warn(`[${MODULE_NAME}] Bed location not found.`);
+      return null;
+    }
+    if (bedPoint.type != LocationType.Point) {
+      this.B.warn(`[${MODULE_NAME}] Bed location must be a single point, not an area/region.`);
+      return null;
+    }
+    return bedPoint;
+  }
+
+  async loadDatabaseDefaults() {
+    const found = await DB.locations.findOneAsync({ _id: MODULE_NAME });
+    if (!found) await DB.locations.insertAsync({ _id: MODULE_NAME, locations: [{ key: "bed", type: LocationType.Point,
+      x: -185, y: 63, z: 412 }] });
   }
 }

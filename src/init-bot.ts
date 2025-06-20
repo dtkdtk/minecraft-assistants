@@ -3,6 +3,7 @@ import * as mf from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
 import Brain from "./ai/brain.js";
 import { setupCommandLineInterface } from "./cli.js";
+import type { GeneralBotOptions, _NecessaryBotOptions } from "./types.js";
 
 /* Some TypeScript magic */
 type _CleanBotOptions = Omit<GeneralBotOptions, keyof _NecessaryBotOptions | "_mfClientOptionsOverrides">;
@@ -23,29 +24,18 @@ export async function createMinecraftAssistantBot(inputOptions: GeneralBotOption
   const options: Options = { ...defaultOptions, ...inputOptions };
   initDebugFn(options.enableDebug);
   for (const database of Object.values(DB))
-    database.setAutocompactionInterval(options.databaseAutosaveInterval);
+    {}//database.setAutocompactionInterval(options.databaseAutosaveInterval);
+
   const bot = mf.createBot({ ...options, ...inputOptions._mfClientOptionsOverrides });
   bot.once("spawn", () => {
     bot.loadPlugin(pathfinder);
     const brain = new Brain(bot);
     setupCommandLineInterface(brain);
   });
-  process.once("exit", async () => await handleExit());
-  process.once("SIGINT", async () => await handleExit());
-}
-
-async function handleExit() {
-  console.log("Saving databases before exit...");
-  for (const [dbName, database] of Object.entries(DB)) {
-    database.stopAutocompaction();
-    await database.compactDatafileAsync();
-    debugLog(`Saved '${dbName}' database`);
-  }
-  console.log("Database saving completed.");
 }
 
 function initDebugFn(enableDebug: boolean) {
   global.debugLog = enableDebug
-    ? (message: string) => console.debug(message)
-    : () => {};
+  ? (message: string) => console.debug(message)
+  : () => {};
 }

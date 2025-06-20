@@ -1,6 +1,9 @@
 import mcdata from "minecraft-data";
 import { Item } from "prismarine-item";
+import { JobPriority } from "../../types.js";
 import type Brain from "../brain.js";
+
+const MODULE_NAME = "Mod_Eat";
 
 const CHECK_INTERVAL = +Durat.sec(3);
 const REGENERATION_MIN_HEALTH = 16;
@@ -8,6 +11,7 @@ const REGENERATION_MIN_FOOD = 19;
 const MIN_SATURATION = 14;
 const EXTREME_SATURATION = 6;
 const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"];
+const kJobEat = Symbol("job:eat");
 
 export default class Mod_Eat {
   private timer: NodeJS.Timeout | undefined;
@@ -48,13 +52,13 @@ export default class Mod_Eat {
       const handler = (slot: number, oldItem: Item | null, newItem: Item | null) => {
         if (slot === eatingItem?.slot && newItem?.type === eatingItem.type) {
           this.B.bot.deactivateItem();
-          this.B.bot.inventory.off("updateSlot" as never, handler);
+          this.B.bot.inventory.off("updateSlot", handler);
           pReturn();
         }
       };
       this.B.bot.activateItem();
       const eatingItem = this.B.bot.heldItem;
-      this.B.bot.inventory.on("updateSlot" as never, handler);
+      this.B.bot.inventory.on("updateSlot", handler);
     });
   }
 
@@ -62,6 +66,7 @@ export default class Mod_Eat {
     const saturationCode = this.checkSaturation();
     if (!saturationCode) return;
     this.B.addJob({
+      jobIdentifier: kJobEat,
       jobDisplayName: saturationCode == 2 ? "Eating food (EXTREME HUNGER)" : "Eating food",
       createdAt: Date.now(),
       priority: saturationCode == 2 ? JobPriority.ForceInterrupt : JobPriority.SoftInterrupt,

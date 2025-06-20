@@ -1,5 +1,7 @@
 import type Brain from "../brain.js";
 
+const MODULE_NAME = "Mod_ChatCommands";
+
 export default class Mod_ChatCommands {
 
   constructor(private readonly B: Brain) {
