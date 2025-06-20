@@ -1,7 +1,7 @@
 import { Bot } from "mineflayer";
 import type { Job, JobUnit } from "../types.js";
 import { JobPriority } from "../types.js";
-import Mod_ChatCommands from "./instincts/chat-commands.js";
+import Mod_ChatCommands from "./instincts/chat_commands.js";
 import Mod_Eat from "./instincts/eat.js";
 import Mod_Sleep from "./instincts/sleep.js";
 

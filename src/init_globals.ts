@@ -5,7 +5,7 @@
 import { default as Nedb } from "@seald-io/nedb";
 import "./lib/actqueue.js";
 import "./lib/durat.js";
-import "./lib/typed-emitter.js";
+import "./lib/typed_emitter.js";
 import type { AggregateJob, DatabaseTypes, Job } from "./types.js";
 import type { Vec3 } from "vec3";
 type Datastore<Schema = Record<string, any>> = Nedb.default<Schema>;

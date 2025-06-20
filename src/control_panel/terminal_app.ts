@@ -1,5 +1,5 @@
-import Brain from "./ai/brain.js";
-import { listenStatusMonitor } from "./control-panel/statusMonitor.js";
+import Brain from "../ai/brain.js";
+import { listenStatusMonitor } from "./status_monitor.js";
 
 /**
  * Обрабатывает ввод с командной строки.

@@ -1,8 +1,8 @@
-import "./init-globals.js";
+import "./init_globals.js";
 import * as mf from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
 import Brain from "./ai/brain.js";
-import { setupCommandLineInterface } from "./cli.js";
+import { setupCommandLineInterface } from "./control_panel/terminal_app.js";
 import type { GeneralBotOptions, _NecessaryBotOptions } from "./types.js";
 
 /* Some TypeScript magic */
