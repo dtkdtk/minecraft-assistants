@@ -5,7 +5,7 @@
   "main": "main.js",
   "type": "module",
   "scripts": {
-    "dev": "npx tsc --watch",
+    "dev": "rm -r ./dist; npx tsc --watch",
     "test": "cd ./test; node ./test-bot.js"
   },
   "repository": {

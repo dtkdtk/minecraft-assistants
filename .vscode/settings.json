@@ -4,12 +4,14 @@
     "actqueue",
     "Autocompaction",
     "autoload",
+    "Bukkit",
     "Datafile",
     "durat",
     "mcdata",
     "mineflayer",
     "prismarine",
     "pufferfish",
+    "RCON",
     "readline",
     "unequip"
   ]
