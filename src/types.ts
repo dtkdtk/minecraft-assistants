@@ -54,7 +54,7 @@ export interface JobUnit {
   /** Приоритет задачи. Больше = приоритетнее. */
   priority: JobPriority;
   /** Нужно ли ещё выполнять задачу? */
-  validate? (): boolean | Promise<boolean>;
+  validate? (): Promise<boolean> | boolean;
   /**
    * Подготовить бота к выполнению задачи. Возвращает успех/неудачу
    * 
@@ -119,6 +119,7 @@ export interface LocationPoint {
   /** Системное имя точки. */
   key: string;
   type: LocationType.Point;
+  
   x: number;
   y: number;
   z: number;
@@ -128,8 +129,10 @@ export interface LocationArea {
   /** Системное имя точки. */
   key: string;
   type: LocationType.Area;
+  
   x1: number;
   z1: number;
+  
   x2: number;
   z2: number;
 }
@@ -137,10 +140,12 @@ export interface LocationArea {
 export interface LocationRegion {
   /** Системное имя точки. */
   key: string;
-  type: LocationType.Area;
+  type: LocationType.Region;
+  
   x1: number;
   y1: number;
   z1: number;
+  
   x2: number;
   y2: number;
   z2: number;
@@ -151,7 +156,7 @@ export type Location = LocationPoint | LocationArea | LocationRegion;
 
 /** Внутренние (internal) типы баз данных. */
 export namespace DatabaseTypes {
-  export type KnownModuleNames = "Mod_ChatCommands" | "Mod_Eat" | "Mod_Sleep";
+  export type KnownModuleNames = "Mod_ChatCommands" | "Mod_Eat" | "Mod_Sleep" | "Mod_Farm";
   export type LocationsDatabase = {
     _id: KnownModuleNames; /* module name */
     locations: Location[];
