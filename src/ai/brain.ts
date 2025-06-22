@@ -33,15 +33,15 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   }
   addJob(J: Job) {
     if (isInterruption(J)) {
-      this.handleJobInterruption(J).then(() => this.startJobExecution());
+      this._handleJobInterruption(J).then(() => this._startJobExecution());
     }
     else if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier)) {
       return;
     }
     else {
       this.jobs.push(J);
-      this.sortJobsQueue();
-      this.startJobExecution();
+      this._sortJobsQueue();
+      this._startJobExecution();
     }
   }
   async exitProcess() {
@@ -61,62 +61,62 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     console.warn(message);
   }
 
-  private sortJobsQueue() {
+  private _sortJobsQueue() {
     this.jobs.sort((A, B) => B.priority - A.priority);
   }
-  private jobExecutionProcess: Promise<void> | undefined;
+  private _jobExecutionProcess: Promise<void> | undefined;
   /** Возвращение `false` происходит автоматически. */
-  private interruptJobExecution = false;
-  private startJobExecution() {
-    if (this.jobExecutionProcess) return;
-    this.jobExecutionProcess = this._initJobExecProcess();
-    this.jobExecutionProcess.then(() => this.jobExecutionProcess = undefined);
+  private _interruptJobExecution = false;
+  private _startJobExecution() {
+    if (this._jobExecutionProcess) return;
+    this._jobExecutionProcess = this._initJobExecProcess();
+    this._jobExecutionProcess.then(() => this._jobExecutionProcess = undefined);
   }
   private async _initJobExecProcess() {
     while (this.jobs.length > 0) {
       const J = this.currentJob()!;
-      await this.invokeJob(J).catch(error => this.handleJobInvocationError(error));
+      await this._invokeJob(J).catch(error => this._handleJobInvocationError(error));
       this.jobs.shift();
-      if (this.interruptJobExecution) break;
+      if (this._interruptJobExecution) break;
     }
-    this.interruptJobExecution = false;
+    this._interruptJobExecution = false;
   }
-  private async invokeJob(J: JobUnit) {
-    if (this.interruptJobExecution && !isInterruption(J)) return;
+  private async _invokeJob(J: JobUnit) {
+    if (this._interruptJobExecution && !isInterruption(J)) return;
     if (J.validate) {
       const isActual = await J.validate();
       if (!isActual) return;
     }
     
-    if (this.interruptJobExecution && !isInterruption(J)) return;
+    if (this._interruptJobExecution && !isInterruption(J)) return;
     if (J.prepare) await J.prepare();
     
-    if (this.interruptJobExecution && !isInterruption(J)) return;
+    if (this._interruptJobExecution && !isInterruption(J)) return;
     await J.execute();
     
-    if (this.interruptJobExecution && !isInterruption(J)) return;
+    if (this._interruptJobExecution && !isInterruption(J)) return;
     if (J.finalize) await J.finalize();
   }
-  private handleJobInvocationError(error: Error) {
+  private _handleJobInvocationError(error: Error) {
     console.error("Job invocation error:\n", error);
   }
 
   /**
    * @param J прерывающая задача
    */
-  private async handleJobInterruption(J: Job) {
+  private async _handleJobInterruption(J: Job) {
     if (J.priority == JobPriority.ForceInterrupt) {
-      this.interruptJobExecution = true;
+      this._interruptJobExecution = true;
       this.jobs.unshift(J);
-      await this.invokeJob(J);
+      await this._invokeJob(J);
       this.jobs.shift();
     }
     else if (J.priority == JobPriority.SoftInterrupt) {
-      this.interruptJobExecution = true;
+      this._interruptJobExecution = true;
       const currentJob = this.currentJobUnit();
       this.jobs.unshift(J);
       await currentJob?.finalize?.();
-      await this.invokeJob(J);
+      await this._invokeJob(J);
       this.jobs.shift();
     }
   }

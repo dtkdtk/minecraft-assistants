@@ -1,4 +1,3 @@
-import { Document } from "@seald-io/nedb";
 import * as mf from "mineflayer";
 
 export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "host" | "username" | "port">;

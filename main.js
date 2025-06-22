@@ -1,1 +1,1 @@
-export * from "./dist/init-bot.js";
+export * from "./dist/init_bot.js";
