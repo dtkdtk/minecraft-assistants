@@ -22,6 +22,7 @@ declare global {
   }>;
   export type Assert<Got, Needed> = Got extends Needed ? Got : never;
   export type SomeFunction = () => unknown;
+  export type AnyFunction = (...args: any[]) => any;
 }
 
 Object.defineProperties(global, {

@@ -1,83 +1,110 @@
-import { Console } from "console";
-import { Transform } from "stream";
-import Brain from "../ai/brain.js";
+import { createInterface as createReadlineInterface, emitKeypressEvents, Key, type Interface as ReadlineInterface } from "readline";
+import type Brain from "../ai/brain.js";
 import type { Job } from "../types.js";
-import { centerText, framedTable, progressBar } from "./terminal_ui.js";
+import { DialogWindow, DialogWindowCanvas } from "./terminal_dialogs.js";
+import { centerText, progressBar } from "./terminal_ui.js";
 
-export interface StatusMonitor {
-  originalConsole: Console;
-  updater: () => void;
-  updateCycle: NodeJS.Timeout;
-  inputHandler: (data: Buffer) => void;
-  finalizers: (() => void)[];
-}
+export class StatusMonitor extends DialogWindow {
+  brain: Brain;
+  readline: ReadlineInterface | undefined
+  currentPrompt: string = "";
+  latestResponse: string = "Type 'exit' to close the monitor, 'help' to show available commands";
 
-const _dummyConsole: Console = new Console(new Transform({ write(a, b, callback) { callback(undefined) } }), undefined, true);
+  constructor(brain: Brain) {
+    super();
+    this.brain = brain;
+    this._keypressEventHandler = ((keyRaw: string, K: Key) => {
+      /* Обрабатываем нажатие клавиш */
+      this._handleSpecialKeypress(K);
+      if (K.name == "return") {
+        this._handleCommand();
+        this.currentPrompt = "";
+      }
+      else {
+        this.currentPrompt += K.sequence;
+      }
+      this.onUpdate();
+    }).bind(this);
+  }
 
-/**
- * Открывает монитор состояния и блокирует текущий цикл событий
- * до тех пор, пока монитор не будет закрыт.
- */
-export function listenStatusMonitor(brain: Brain): Promise<void> {
-  return new Promise<void>((pReturn, pThrow) => {
-    const monitor = openStatusMonitor(brain);
-    monitor.finalizers.push(() => pReturn());
-  });
-}
-
-export function openStatusMonitor(brain: Brain): StatusMonitor {
-  const statusMonitor: StatusMonitor = {} as any;
-  const originalConsole = global.console;
-  global.console = _dummyConsole;
-  const updater = () => {
-    drawInterface(brain, originalConsole, { width: process.stdout.columns, height: process.stdout.rows });
-    originalConsole.log("\n\nPress 'Enter' key to quit from the monitor");
+  onOpen() {
+    this.readline = createReadlineInterface({ input: process.stdin });
+    process.stdin.setRawMode(true); /* для перехвата ввода до нажатия Enter.
+      Вернётся в прежнее состояние после закрытия данного диалога. */
+    emitKeypressEvents(process.stdin, this.readline);
+    process.stdin.on("keypress", this._keypressEventHandler);
+    this.readline.resume();
+    this.onUpdate();
   };
-  const inputHandler = (data: Buffer) => {
-    /*const input = data.toString("utf-8");
-    if (input == "q") {
-      closeStatusMonitor(statusMonitor);
-      return;
-    }*/
-    closeStatusMonitor(statusMonitor);
-  };
-  process.stdin.on("data", inputHandler);
+  onUpdate() {
+    this.drawInterface();
+  }
+  updateInterval = 500;
+  onFinalize = [() => {
+    process.stdin.removeListener("keypress", this._keypressEventHandler);
+    this.readline!.close();
+    this.readline = undefined;
+  }];
 
-  statusMonitor.originalConsole = originalConsole;
-  statusMonitor.inputHandler = inputHandler;
-  statusMonitor.updater = updater;
-  statusMonitor.updateCycle = setInterval(() => updater(), 500);
-  statusMonitor.finalizers = [];
-  return statusMonitor;
+  drawInterface() {
+    const width = process.stdout.columns, height = process.stdout.rows;
+    const C = new DialogWindowCanvas(width, height);
+    const D = getStatusMonitorData(this.brain);
+    C.append(centerText(`'${this.brain.bot.player.displayName}' ASSISTANT STATUS MONITOR`, width, "_"));
+    C.append("");
+    C.append([
+      {widthPercent: 60, content:
+        `Health: ${progressBar(Math.round(D.health), 20)}\n` +
+        `Food:   ${progressBar(Math.round(D.food), 20)}\n` +
+        `Job queue:\n${D.jobsDisplay || "  <empty>"}`
+      },
+      {widthPercent: 40, content:
+        `Inventory: (${D.inventory.length})\n` +
+        D.inventory.map(([N, name]) => `- ${N}x ${name}`).join("\n")
+      }
+    ]);
+    C.bottomAppend("////////////////////");
+    C.bottomAppend(this.latestResponse);
+    C.bottomAppend("////////////////////");
+    C.bottomAppend("> " + this.currentPrompt);
+    this.rawDraw(C.render());
+  }
+
+  private _keypressEventHandler;
+  private _handleSpecialKeypress(K: Key) {
+    /* TODO: Добавить поддержку клавиш стрелок и проч. спец.кнопок */
+    switch (K.name) {
+      case "backspace": {
+        this.currentPrompt = this.currentPrompt.slice(0, -1);
+        break;
+      }
+      case "escape": {
+        this.currentPrompt = "";
+        break;
+      }
+      default: break;
+    }
+  }
+  private _handleCommand() {
+    switch (this.currentPrompt) {
+      case "help": {
+        this.latestResponse = "Commands: 'exit'/'quit' to exit this monitor";
+        break;
+      }
+      case "exit":
+      case "quit": {
+        this.closeDialogWindow();
+        return;
+      }
+      default: {
+        this.latestResponse = `(!) Unknown command: '${this.currentPrompt}'. Type 'help' to show available commands`;
+        break;
+      }
+    }
+  }
 }
 
-export function closeStatusMonitor(monitor: StatusMonitor) {
-  clearInterval(monitor.updateCycle);
-  process.stdin.off("data", monitor.inputHandler);
-  global.console = monitor.originalConsole;
-  console.clear();
-  monitor.finalizers.forEach(f => f());
-}
-
-/**
- * Рисует псевдографический интерфейс в указанный экземпляр консоли
- */
-export function drawInterface(B: Brain, C: Console, size: { width: number, height: number }) {
-  const D = getData(B);
-  C.clear();
-  C.log(centerText(`'${B.bot.player.displayName}' ASSISTANT STATUS MONITOR`, size.width, "_"));
-  C.log("");
-  C.log(framedTable(size.width, [
-    `Health: ${progressBar(Math.round(D.health), 20)}\n` +
-    `Food:   ${progressBar(Math.round(D.food), 20)}\n` +
-    `Job queue:\n${D.jobsDisplay || "  <empty>"}`,
-
-    `Inventory: (${D.inventory.length})\n` +
-    D.inventory.map(([N, name]) => `- ${N}x ${name}`).join("\n")
-  ], [60, 40]));
-}
-
-export function getData(B: Brain) {
+export function getStatusMonitorData(B: Brain) {
   const inventory: [number, string][] = [];
   ;{
     const counts = new Map<string, number>();
@@ -93,8 +120,6 @@ export function getData(B: Brain) {
     jobsDisplay: _displayJobs(B.jobs, undefined)
   };
 }
-
-
 
 function _displayJobs(jobs: readonly Job[], depth = 1): string {
   const prefix = " ".repeat(depth * 2);
