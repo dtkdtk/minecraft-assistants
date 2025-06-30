@@ -1,6 +1,6 @@
 import mcdata from "minecraft-data";
-import { Item } from "prismarine-item";
-import { JobPriority } from "../../types.js";
+import { type Item } from "prismarine-item";
+import { JobPriority, type JobUnit } from "../../types.js";
 import type Brain from "../brain.js";
 
 const MODULE_NAME = "Mod_Eat";
@@ -27,22 +27,26 @@ export default class Mod_Eat {
   }
 
   /** Возвращает успех/неудачу */
-  async whenHungry(extreme: boolean): Promise<boolean> {
+  async whenHungry(extreme: boolean, jobPromisePause?: () => Promise<void> | undefined): Promise<boolean> {
     /* Ищем еду в инвентаре. Находим - едим.
       Не нашли - сообщаем Мозгу. */
     const food = this.findFood();
     if (!food) {
-      //TODO: find food
+      //TODO: пойти взять еду
       if (this._lastHungryMessage + +Durat.min(3) < Date.now()) {
         this._lastHungryMessage = Date.now();
         this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.food}`);
       }
       return false;
     }
-    this.B.bot.equip(food, "hand");
+    await this.B.bot.equip(food, "hand");
     await this.activateFoodItem();
-    this.B.bot.unequip("hand");
+    await this.B.bot.unequip("hand");
     
+    /* Если задача приостановлена / отменена - не судьба;
+      функция update() всё равно добавит новую задачу, если потребуется. */
+    if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return true;
+
     //Может, нам нужно ещё поесть?
     if (this.checkSaturation() != 0) return await this.whenHungry(false);
     return true;
@@ -65,14 +69,7 @@ export default class Mod_Eat {
   update() {
     const saturationCode = this.checkSaturation();
     if (!saturationCode) return;
-    this.B.addJob({
-      jobIdentifier: kJobEat,
-      jobDisplayName: saturationCode == 2 ? "Eating food (EXTREME HUNGER)" : "Eating food",
-      createdAt: Date.now(),
-      priority: saturationCode == 2 ? JobPriority.ForceInterrupt : JobPriority.SoftInterrupt,
-      validate: () => Boolean(this.checkSaturation()),
-      execute: async () => await this.whenHungry(saturationCode == 2),
-    });
+    this.B.addJob(new Job_EatFood(this));
   }
 
   /** `2` = сильное голодание, `1` = голодание, `0` = всё ОК */
@@ -100,5 +97,29 @@ export default class Mod_Eat {
       }
     }
     return currentBestChoice;
+  }
+}
+
+
+
+/** Создаётся, когда боту требуется поесть еды. */
+class Job_EatFood implements JobUnit {
+  jobIdentifier: symbol | null;
+  jobDisplayName: string;
+  createdAt: number;
+  promisePause?: Promise<void> | undefined;
+  priority: JobPriority;
+  validate? (): Promise<boolean>;
+  prepare? (): Promise<boolean>;
+  execute: () => Promise<boolean>;
+  finalize? (): Promise<boolean>;
+  
+  constructor(M: Mod_Eat) {
+    this.jobIdentifier = kJobEat;
+    this.jobDisplayName = M.checkSaturation() == 2 ? "Eating food (EXTREME HUNGER)" : "Eating food";
+    this.createdAt = Date.now();
+    this.priority = M.checkSaturation() == 2 ? JobPriority.ForceInterrupt : JobPriority.SoftInterrupt;
+    this.validate = async () => Boolean(M.checkSaturation());
+    this.execute = async () => await M.whenHungry(M.checkSaturation() == 2, () => this.promisePause);
   }
 }

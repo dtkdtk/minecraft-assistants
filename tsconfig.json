@@ -1,11 +1,12 @@
 {
   "include": [
     "./src/**/*.ts",
-    "./src/**/*.js"
+    "./src/**/*.js", "__PRIVATE__/transaction_chain.ts",
   ],
   "exclude": [
     "./node_modules/**/*",
-    "dist/**/*"
+    "dist/**/*",
+    "__PRIVATE__/**/*"
   ],
   "compilerOptions": {
     "noEmit": false,

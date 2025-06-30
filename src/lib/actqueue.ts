@@ -1,37 +1,34 @@
-declare global {
-  export const ActionQueue: typeof _ActionQueue;
-}
-
-class _ActionQueue
+/**
+ * Очередь действий. Выполняет указанные действия равномерно, через равные временные промежутки.
+ */
+export class ActionQueue
 {
-  readonly #cooldownMs: number;
-  readonly #queue: SomeFunction[] = [];
-  #timeout: NodeJS.Timeout | null = null;
+  private readonly _cooldownMs: number;
+  private readonly _queue: SomeFunction[] = [];
+  private _timeout: NodeJS.Timeout | null = null;
 
   constructor(cooldownMs: number)
   {
-    this.#cooldownMs = cooldownMs;
+    this._cooldownMs = cooldownMs;
   }
 
   push(action: SomeFunction)
   {
-    this.#queue.push(action);
-    if (this.#timeout == null) this.#execChainedAction();
+    this._queue.push(action);
+    if (this._timeout == null) this._execChainedAction();
   }
 
-  #createTimeout()
+  private _createTimeout()
   {
-    this.#timeout ??= setTimeout(() => {
-      this.#timeout = null;
-      this.#execChainedAction()
-    }, this.#cooldownMs);
+    this._timeout ??= setTimeout(() => {
+      this._timeout = null;
+      this._execChainedAction()
+    }, this._cooldownMs);
   }
-  #execChainedAction()
+  private _execChainedAction()
   {
-    if (this.#queue.length == 0) return;
-    this.#queue.shift()?.();
-    this.#createTimeout();
+    if (this._queue.length == 0) return;
+    this._queue.shift()?.();
+    this._createTimeout();
   }
 }
-
-Object.defineProperty(global, "ActionQueue", { value: _ActionQueue });

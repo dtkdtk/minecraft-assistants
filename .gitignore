@@ -2,6 +2,7 @@
 /test/data/
 /dist/
 /SANDBOX.js
+__PRIVATE__
 
 # Logs
 logs

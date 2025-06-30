@@ -26,10 +26,10 @@ export default class Mod_Farm {
       jobDisplayName: "Farming",
       createdAt: Date.now(),
       priority: JobPriority.Plain,
-      prepare: () => this.getReadyToPlant(),
-      validate: () => this.test(),
-      execute: () => this.test(),
-      finalize: () => this.test(),
+      prepare: async () => this.getReadyToPlant(),
+      validate: async () => this.test(),
+      execute: async () => this.test(),
+      finalize: async () => this.test(),
     });
   }
 

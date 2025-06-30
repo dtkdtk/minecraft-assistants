@@ -35,8 +35,8 @@ export default class Mod_Sleep {
       jobDisplayName: "Going to sleep",
       createdAt: Date.now(),
       priority: JobPriority.Foreground,
-      validate: () => this.checkTime(),
-      execute: () => this.whenNight(),
+      validate: async () => this.checkTime(),
+      execute: async () => await this.whenNight(),
     })
   }
   

@@ -32,15 +32,12 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     else return J;
   }
   addJob(J: Job) {
-    if (isInterruption(J)) {
-      this._handleJobInterruption(J).then(() => this._startJobExecution());
-    }
-    else if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier)) {
+    if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier))
       return;
-    }
+    else if (J.priority > (this.currentJob()?.priority ?? 0))
+      this._handleJobInterruption(J).then(() => this._startJobExecution());
     else {
       this.jobs.push(J);
-      this._sortJobsQueue();
       this._startJobExecution();
     }
   }
@@ -61,70 +58,70 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     console.warn(message);
   }
 
-  private _sortJobsQueue() {
-    this.jobs.sort((A, B) => B.priority - A.priority);
-  }
+
+
+  /** Процесс прерывания задачи. Резольвится, когда прерывание текущей задачи окончено. */
+  private _jobInterruptionProcess: Promise<void> | undefined;
   private _jobExecutionProcess: Promise<void> | undefined;
-  /** Возвращение `false` происходит автоматически. */
-  private _interruptJobExecution = false;
   private _startJobExecution() {
     if (this._jobExecutionProcess) return;
+    this._sortJobsQueue();
     this._jobExecutionProcess = this._initJobExecProcess();
     this._jobExecutionProcess.then(() => this._jobExecutionProcess = undefined);
   }
   private async _initJobExecProcess() {
     while (this.jobs.length > 0) {
-      const J = this.currentJob()!;
+      const J = this.currentJobUnit()!;
       await this._invokeJob(J).catch(error => this._handleJobInvocationError(error));
-      this.jobs.shift();
-      if (this._interruptJobExecution) break;
     }
-    this._interruptJobExecution = false;
   }
   private async _invokeJob(J: JobUnit) {
-    if (this._interruptJobExecution && !isInterruption(J)) return;
+    if (J.promisePause !== undefined) return;
     if (J.validate) {
       const isActual = await J.validate();
       if (!isActual) return;
     }
     
-    if (this._interruptJobExecution && !isInterruption(J)) return;
+    if (J.promisePause !== undefined) return;
     if (J.prepare) await J.prepare();
     
-    if (this._interruptJobExecution && !isInterruption(J)) return;
+    if (J.promisePause !== undefined) return;
     await J.execute();
     
-    if (this._interruptJobExecution && !isInterruption(J)) return;
+    if (J.promisePause !== undefined) return;
     if (J.finalize) await J.finalize();
   }
-  private _handleJobInvocationError(error: Error) {
+  private _handleJobInvocationError(error: any) {
+    if (error instanceof BrainIgnoredError) return;
     console.error("Job invocation error:\n", error);
   }
-
+  private _sortJobsQueue() {
+    this.jobs.sort((A, B) => B.priority - A.priority);
+  }
   /**
+   * Функция сама добавляет задачу в очередь задач.
    * @param J прерывающая задача
    */
   private async _handleJobInterruption(J: Job) {
-    if (J.priority == JobPriority.ForceInterrupt) {
-      this._interruptJobExecution = true;
-      this.jobs.unshift(J);
-      await this._invokeJob(J);
-      this.jobs.shift();
+    const current = this.currentJob();
+    this.jobs.unshift(J);
+    let unpauseFn, rejectPauseFn;
+    const promisePause = new Promise<void>((res, rej) => { unpauseFn = res; rejectPauseFn = rej });
+    if (current !== undefined) {
+      current.promisePause = promisePause;
+      await current.finalize?.().catch(() => {});
     }
-    else if (J.priority == JobPriority.SoftInterrupt) {
-      this._interruptJobExecution = true;
-      const currentJob = this.currentJobUnit();
-      this.jobs.unshift(J);
-      await currentJob?.finalize?.();
-      await this._invokeJob(J);
-      this.jobs.shift();
-    }
+    this._startJobExecution();
   }
 }
 
-function isInterruption(J: Job): boolean {
-  return J.priority == JobPriority.ForceInterrupt || J.priority == JobPriority.SoftInterrupt;
+export class BrainIgnoredError extends Error {
+  constructor() {
+    super();
+    this.name = "BrainIgnoredError";
+  }
 }
+
 function wrongExitCallback() {
   throw new Error("[DEVELOPER WARNING]\nUnsafe 'process.exit()'!\nUse 'await brain.exitProcess()' instead");
 }
