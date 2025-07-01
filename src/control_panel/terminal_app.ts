@@ -1,6 +1,10 @@
-import Brain from "../ai/brain.js";
+import libReadline from "readline";
+import type Brain from "../ai/brain.js";
 import { StatusMonitor } from "./status_monitor.js";
-import { sendWelcomeMessage, sendBasicPrompt } from "./terminal_ui.js";
+import { sendBasicPrompt, sendWelcomeMessage } from "./terminal_ui.js";
+import { DialogWindow } from "./terminal_dialogs.js";
+
+export const rl = libReadline.createInterface({ input: process.stdin });
 
 /**
  * Обрабатывает ввод с командной строки.
@@ -8,11 +12,16 @@ import { sendWelcomeMessage, sendBasicPrompt } from "./terminal_ui.js";
  */
 export function setupCommandLineInterface(brain: Brain): Promise<never> {
   return new Promise<never>(() => {
-    process.stdin.setRawMode(false);
-    sendWelcomeMessage(brain);
-    sendBasicPrompt();
-    process.stdin.on("data", async (rawData) => {
-      const input = rawData.toString("utf-8");
+    libReadline.emitKeypressEvents(process.stdin, rl);
+    process.stdin.resume();
+    if (process.stdin.isTTY) process.stdin.setRawMode(false);
+    
+    const baseWindow = new DialogWindow();
+    baseWindow.onOpen = () => {
+      sendWelcomeMessage(brain);
+      sendBasicPrompt();
+    };
+    baseWindow.handleLine = async (input) => {
       const command = input.split(/\s/)[0];
       if (!command) return sendBasicPrompt();
       switch (command) {
@@ -41,6 +50,7 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
           return sendBasicPrompt();
         }
       }
-    });
+    };
+    baseWindow.openDialogWindow();
   });
 }

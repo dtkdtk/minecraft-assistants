@@ -1,6 +1,8 @@
 import { Console } from "console";
 import { Transform } from "stream";
 import { framedTable } from "./terminal_ui.js";
+import { Key } from "readline";
+import { rl } from "./terminal_app.js";
 
 /* Диалоговые окна перехватывают консоль, модифицируя глобальный объект `console`.
   Внутри диалоговых окон можно открывать другие диалоговые окна; они будут помещаться в специальный стек. */
@@ -10,6 +12,9 @@ export class DialogWindow {
   onUpdate? (): Promise<void> | void;
   onFinalize?: (() => Promise<void> | void)[];
   updateInterval?: number;
+  clearScreenAfterClose?: boolean;
+  handleLine? (line: string): Promise<void> | void;
+  handleKeypress? (raw: string, keyData: Key): Promise<void> | void;
 
   dialogPromise: Promise<void> | undefined;
   private _breakDialogPromise!: () => void;
@@ -19,14 +24,15 @@ export class DialogWindow {
       this._breakDialogPromise = () => pReturn();
       DialogWindow.dialogStack.push(this);
       DialogWindow._resetCurrentState();
-      DialogWindow._takeControl();
+      DialogWindow._takeControl(this);
       DialogWindow._applyWindow(this);
     });
   }
 
   closeDialogWindow() {
     DialogWindow._resetCurrentState();
-    process.stdout.write(new DialogWindowCanvas(process.stdout.columns, process.stdout.rows).render()); //clear
+    if (this.clearScreenAfterClose)
+      this.rawDraw(new DialogWindowCanvas(process.stdout.columns, process.stdout.rows).render()); //clear
     while (true) {
       const dialog = DialogWindow.dialogStack.pop();
       if (dialog === undefined) break;
@@ -42,61 +48,58 @@ export class DialogWindow {
   }
 
   rawDraw(text: string) {
+    process.stdout.cursorTo(0, 0);
     process.stdout.write(text);
   }
 
-  private static _capturingOutputEvents: string[] = ["resize"];
-  private static _capturingInputEvents: string[] = [
-    "close", "connect", "connectionAttempt", "connectionAttemptFailed", "connectionAttemptTimeout",
-    "data", "drain", "end", "error", "lookup", "ready", "timeout",
-    "keypress"
-  ];
+
+
   /** Перехват контроля над вводом-выводом */
-  private static _takeControl() {
-    const outputEvents: InputOutputControls["outputEvents"] = {};
-    for (const eventName of this._capturingOutputEvents) {
-      const listeners = process.stdout.rawListeners(eventName) as AnyFunction[];
-      if (listeners.length == 0) continue;
-      outputEvents[eventName] = listeners;
-      process.stdout.removeAllListeners(eventName);
-    }
-    const inputEvents: InputOutputControls["inputEvents"] = {};
-    for (const eventName of this._capturingInputEvents) {
-      const listeners = process.stdin.rawListeners(eventName) as AnyFunction[];
-      if (listeners.length == 0) continue;
-      inputEvents[eventName] = listeners;
-      process.stdin.removeAllListeners(eventName);
-    }
+  private static _takeControl(controls: Pick<InputOutputControls, "handleKeypress" | "handleLine">) {
+    const previousControls = DialogWindow.controlStack.at(-1);
+    this._dropControls(previousControls);
+    
     const originalConsole = global.console;
     global.console = DialogWindow._dummyConsole;
-    DialogWindow.controlStack.push({
+
+    const currentControls = {
       xConsole: originalConsole,
-      outputEvents,
-      inputEvents,
-      inputRawMode: process.stdin.isRaw,
-      inputPause: process.stdin.isPaused()
-    });
+      ...controls
+    };
+    this._applyControls(currentControls);
+    DialogWindow.controlStack.push(currentControls);
   }
 
   /** Возвращение контроля над вводом-выводом предыдущим владельцам */
   private static _returnControl() {
-    /* Удалить текущие обработчики */
-    this._capturingOutputEvents.forEach(eventName => process.stdout.removeAllListeners(eventName));
-    this._capturingInputEvents.forEach(eventName => process.stdin.removeAllListeners(eventName));
-
-    const previousControls = DialogWindow.controlStack.pop()!;
-    global.console = previousControls.xConsole;
-    for (const eventName of Object.keys(previousControls.outputEvents)) {
-      previousControls.outputEvents[eventName].forEach(listener => process.stdout.addListener(eventName, listener));
-    }
-    for (const eventName of Object.keys(previousControls.inputEvents)) {
-      previousControls.inputEvents[eventName].forEach(listener => process.stdin.addListener(eventName, listener));
-    }
-    process.stdin.setRawMode(previousControls.inputRawMode);
-    if (previousControls.inputPause) process.stdin.pause();
-    else process.stdin.resume();
+    const currentControls = DialogWindow.controlStack.pop();
+    this._dropControls(currentControls);
+    const previousControls = DialogWindow.controlStack.at(-1);
+    this._applyControls(previousControls);
   }
-  
+
+  private static _dropControls(controls: InputOutputControls | undefined) {
+    if (!controls) return;
+    if (controls.handleKeypress)
+      process.stdin.removeListener("keypress", controls.handleKeypress);
+    if (controls.handleLine)
+      rl.removeListener("line", controls.handleLine);
+    rl.emit("line"); /* Подразумевается, что кроме управляемых (диалоговыми окнами)
+      обработчиков событий, других у нас нет */
+  }
+  private static _applyControls(controls: InputOutputControls | undefined) {
+    if (!controls) return;
+    global.console = controls.xConsole;
+    if (controls.handleKeypress)
+      process.stdin.addListener("keypress", controls.handleKeypress);
+    if (controls.handleLine)
+      rl.addListener("line", controls.handleLine);
+    
+    if (controls.handleKeypress && process.stdin.isTTY)
+      process.stdin.setRawMode(true);
+    else if (!controls.handleKeypress)
+      process.stdin.setRawMode(false);
+  }
   private static _resetCurrentState() {
     if (DialogWindow.currentUpdateInterval) {
       clearInterval(DialogWindow.currentUpdateInterval);
@@ -119,11 +122,11 @@ export class DialogWindow {
 }
 type InputOutputControls = {
   xConsole: Console;
-  outputEvents: Record<string, AnyFunction[]>;
-  inputEvents: Record<string, AnyFunction[]>;
-  inputRawMode: boolean;
-  inputPause: boolean;
+  handleLine?: (line: string) => any;
+  handleKeypress?: (raw: string, keyData: Key) => any;
 };
+
+
 
 /* TODO: Добавить авто-прокрутку широких/высоких блоков текста */
 
@@ -140,36 +143,47 @@ export class DialogWindowCanvas {
   constructor(public width: number, public height: number) {}
 
   /** Добавляет строку **после** ранее добавленных */
-  append(row: HorizontalRow) {
+  append(row: HorizontalRow): this {
     this.rows.push(row);
+    return this;
   }
   /** Добавляет строку **перед** ранее добавленными */
-  prepend(row: HorizontalRow) {
+  prepend(row: HorizontalRow): this {
     this.rows.unshift(row);
+    return this;
   }
   /** Добавляет строку **в конец экрана**, **после** ранее добавленных */
-  bottomAppend(row: HorizontalRow) {
+  bottomAppend(row: HorizontalRow): this {
     this.bottomRows.push(row);
+    return this;
   }
   /** Добавляет строку **в конец экрана**, **перед** ранее добавленными */
-  bottomPrepend(row: HorizontalRow) {
+  bottomPrepend(row: HorizontalRow): this {
     this.bottomRows.unshift(row);
+    return this;
   }
-  clearRows() {
+  clearRows(): this {
     this.rows = [];
     this.bottomRows = [];
+    return this;
   }
+  /**
+   * Примечание: Ответственность за наличие перевода строки на предыдущей
+   * линии текста консоли несёте вы.
+   */
   render(): string {
-    const topLines = this._renderLinesFrom(this.rows).slice(0, this.height);
-    const bottomLines = this._renderLinesFrom(this.bottomRows).slice(0, this.height - topLines.length);
+    const topLines = this._renderLinesFrom(this.rows)
+      .slice(0, this.height).map(it => it.padEnd(this.width, " "));
+    const bottomLines = this._renderLinesFrom(this.bottomRows)
+      .slice(0, this.height - topLines.length).map(it => it.padEnd(this.width, " "));
     const middleSpace = Math.max(0, this.height - topLines.length - bottomLines.length);
-    const middleLines = Array(middleSpace).fill('');
+    const middleLines = Array(middleSpace).fill("".padEnd(this.width, " "));
     const screenLines = [
       ...topLines,
       ...middleLines,
       ...bottomLines
     ].slice(0, this.height);
-    return "\n" + screenLines.join("\n");
+    return screenLines.join("\n");
   }
 
   private _renderLinesFrom(rows: HorizontalRow[]): string[] {

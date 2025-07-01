@@ -1,56 +1,38 @@
-import { createInterface as createReadlineInterface, emitKeypressEvents, Key, type Interface as ReadlineInterface } from "readline";
+import type { Key } from "readline";
 import type Brain from "../ai/brain.js";
 import type { Job } from "../types.js";
 import { DialogWindow, DialogWindowCanvas } from "./terminal_dialogs.js";
-import { centerText, progressBar } from "./terminal_ui.js";
+import { alignCenter, alignLeft, progressBar } from "./terminal_ui.js";
+import { styleText } from "util";
 
 export class StatusMonitor extends DialogWindow {
   brain: Brain;
-  readline: ReadlineInterface | undefined
-  currentPrompt: string = "";
-  latestResponse: string = "Type 'exit' to close the monitor, 'help' to show available commands";
 
   constructor(brain: Brain) {
     super();
     this.brain = brain;
-    this._keypressEventHandler = ((keyRaw: string, K: Key) => {
-      /* Обрабатываем нажатие клавиш */
-      this._handleSpecialKeypress(K);
-      if (K.name == "return") {
-        this._handleCommand();
-        this.currentPrompt = "";
+    this.handleKeypress = ((keyRaw: string, K: Key) => {
+      if (K.name == "q") {
+        this.closeDialogWindow();
+        return;
       }
-      else {
-        this.currentPrompt += K.sequence;
-      }
-      this.onUpdate();
     }).bind(this);
   }
 
   onOpen() {
-    this.readline = createReadlineInterface({ input: process.stdin });
-    process.stdin.setRawMode(true); /* для перехвата ввода до нажатия Enter.
-      Вернётся в прежнее состояние после закрытия данного диалога. */
-    emitKeypressEvents(process.stdin, this.readline);
-    process.stdin.on("keypress", this._keypressEventHandler);
-    this.readline.resume();
     this.onUpdate();
   };
   onUpdate() {
     this.drawInterface();
   }
   updateInterval = 500;
-  onFinalize = [() => {
-    process.stdin.removeListener("keypress", this._keypressEventHandler);
-    this.readline!.close();
-    this.readline = undefined;
-  }];
+  clearScreenAfterClose = true;
 
   drawInterface() {
-    const width = process.stdout.columns, height = process.stdout.rows;
-    const C = new DialogWindowCanvas(width, height);
+    const W = process.stdout.columns, H = process.stdout.rows;
+    const C = new DialogWindowCanvas(W, H);
     const D = getStatusMonitorData(this.brain);
-    C.append(centerText(`'${this.brain.bot.player.displayName}' ASSISTANT STATUS MONITOR`, width, "_"));
+    C.append(alignCenter(`'${this.brain.bot.player.displayName}' ASSISTANT STATUS MONITOR`, W, "_"));
     C.append("");
     C.append([
       {widthPercent: 60, content:
@@ -63,44 +45,8 @@ export class StatusMonitor extends DialogWindow {
         D.inventory.map(([N, name]) => `- ${N}x ${name}`).join("\n")
       }
     ]);
-    C.bottomAppend("////////////////////");
-    C.bottomAppend(this.latestResponse);
-    C.bottomAppend("////////////////////");
-    C.bottomAppend("> " + this.currentPrompt);
+    C.bottomAppend(styleText("inverse", alignLeft("Press [Q] to exit the monitor", W)));
     this.rawDraw(C.render());
-  }
-
-  private _keypressEventHandler;
-  private _handleSpecialKeypress(K: Key) {
-    /* TODO: Добавить поддержку клавиш стрелок и проч. спец.кнопок */
-    switch (K.name) {
-      case "backspace": {
-        this.currentPrompt = this.currentPrompt.slice(0, -1);
-        break;
-      }
-      case "escape": {
-        this.currentPrompt = "";
-        break;
-      }
-      default: break;
-    }
-  }
-  private _handleCommand() {
-    switch (this.currentPrompt) {
-      case "help": {
-        this.latestResponse = "Commands: 'exit'/'quit' to exit this monitor";
-        break;
-      }
-      case "exit":
-      case "quit": {
-        this.closeDialogWindow();
-        return;
-      }
-      default: {
-        this.latestResponse = `(!) Unknown command: '${this.currentPrompt}'. Type 'help' to show available commands`;
-        break;
-      }
-    }
   }
 }
 

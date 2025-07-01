@@ -10,12 +10,17 @@ export function sendWelcomeMessage(brain: Brain) {
   console.log(`Type 'quit' or 'exit' to stop the bot and close this window`);
 }
 
-export function centerText(text: string, width: number, symbol: string = " "): string {
-  const textLength = text.length;
-  const padding = Math.max(0, Math.floor((width - textLength) / 2));
-  return symbol.repeat(padding) + text + symbol.repeat(width - padding - text.length);
+
+
+export function alignLeft(text: string, width: number, fillSpace: string = " "): string {
+  const padding = Math.max(0, (width - text.length));
+  return text + fillSpace.repeat(padding);
 }
 
+export function alignCenter(text: string, width: number, fillSpace: string = " "): string {
+  const padding = Math.max(0, Math.floor((width - text.length) / 2));
+  return fillSpace.repeat(padding) + text + fillSpace.repeat(width - padding - text.length);
+}
 
 export function progressBar(filled: number, total: number): string {
   filled = filled > total ? total : filled;
