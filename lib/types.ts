@@ -17,6 +17,11 @@ export interface GeneralBotOptions extends _NecessaryBotOptions {
    * @default false
    */
   enableDebug?: boolean;
+  /**
+   * Интерактивный режим командной строки. Перманентно блокирует поток ввода-вывода.
+   * @default false
+   */
+  interactiveCli?: boolean;
 }
 
 export type Bot = mf.Bot;

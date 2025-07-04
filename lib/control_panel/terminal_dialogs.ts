@@ -83,8 +83,8 @@ export class DialogWindow {
     if (controls.handleKeypress)
       process.stdin.removeListener("keypress", controls.handleKeypress);
     if (controls.handleLine)
-      rl.removeListener("line", controls.handleLine);
-    rl.emit("line"); /* Подразумевается, что кроме управляемых (диалоговыми окнами)
+      rl().removeListener("line", controls.handleLine);
+    rl().emit("line"); /* Подразумевается, что кроме управляемых (диалоговыми окнами)
       обработчиков событий, других у нас нет */
   }
   private static _applyControls(controls: InputOutputControls | undefined) {
@@ -93,7 +93,7 @@ export class DialogWindow {
     if (controls.handleKeypress)
       process.stdin.addListener("keypress", controls.handleKeypress);
     if (controls.handleLine)
-      rl.addListener("line", controls.handleLine);
+      rl().addListener("line", controls.handleLine);
     
     if (controls.handleKeypress && process.stdin.isTTY)
       process.stdin.setRawMode(true);

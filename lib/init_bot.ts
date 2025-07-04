@@ -12,12 +12,12 @@ type _OptionalBotOptions = { [key in keyof _CleanBotOptions]: NonNullable<_Clean
 const defaultOptions: Required<_OptionalBotOptions> = {
   databaseAutosaveInterval: +Durat.min(3),
   enableDebug: false,
+  interactiveCli: false,
 };
 
 type Options = GeneralBotOptions & Required<_OptionalBotOptions>;
 
 //Здесь будет происходить инициализация бота на готовых параметрах.
-//Параметры получаются из 'cli.js' или (в будущем) каких-то иных источников.
 //Сделано, чтобы бота можно было запускать разными способами (в будущем).
 
 export async function createMinecraftAssistantBot(inputOptions: GeneralBotOptions) {
@@ -30,7 +30,7 @@ export async function createMinecraftAssistantBot(inputOptions: GeneralBotOption
   bot.once("spawn", () => {
     bot.loadPlugin(pathfinder);
     const brain = new Brain(bot);
-    setupCommandLineInterface(brain);
+    if (inputOptions.interactiveCli) setupCommandLineInterface(brain);
   });
 }
 

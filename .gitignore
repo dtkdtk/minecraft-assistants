@@ -1,6 +1,7 @@
 /test/test-bot-cfg.js
 /test/data/
 /exe/data/
+/exe/configuration.conf
 /dist/
 /SANDBOX.js
 __PRIVATE__

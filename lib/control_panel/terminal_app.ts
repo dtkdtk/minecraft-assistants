@@ -6,7 +6,8 @@ import { DialogWindow } from "./terminal_dialogs.js";
 
 const createReadline = () => libReadline.createInterface({ input: process.stdin, output: process.stdout });
 
-export let rl = createReadline();
+let __rl: libReadline.Interface;
+export const rl = () => __rl ?? (__rl = createReadline());
 
 /**
  * Обрабатывает ввод с командной строки.
@@ -14,7 +15,7 @@ export let rl = createReadline();
  */
 export function setupCommandLineInterface(brain: Brain): Promise<never> {
   return new Promise<never>(() => {
-    libReadline.emitKeypressEvents(process.stdin, rl);
+    libReadline.emitKeypressEvents(process.stdin, rl());
     process.stdin.resume();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 

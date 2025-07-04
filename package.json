@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "rm -r ./dist; npx tsc --watch",
-    "test": "cd ./test; node ./test-bot.js"
+    "test": "cd ./test; node ./test_bot.js"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
+    "chalk": "^5.4.1",
     "ini": "^5.0.0",
     "minecraft-data": "^3.90.0",
     "mineflayer": "^4.29.0",
@@ -39,6 +40,6 @@
     "vec3": "^0.1.10"
   },
   "engines": {
-    "node": ">= 22"
+    "node": ">= 18"
   }
 }
