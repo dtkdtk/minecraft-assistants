@@ -4,7 +4,9 @@ import { StatusMonitor } from "./status_monitor.js";
 import { sendBasicPrompt, sendWelcomeMessage } from "./terminal_ui.js";
 import { DialogWindow } from "./terminal_dialogs.js";
 
-export const rl = libReadline.createInterface({ input: process.stdin });
+const createReadline = () => libReadline.createInterface({ input: process.stdin, output: process.stdout });
+
+export let rl = createReadline();
 
 /**
  * Обрабатывает ввод с командной строки.
@@ -15,7 +17,7 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
     libReadline.emitKeypressEvents(process.stdin, rl);
     process.stdin.resume();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
-    
+
     const baseWindow = new DialogWindow();
     baseWindow.onOpen = () => {
       sendWelcomeMessage(brain);
@@ -37,8 +39,7 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
           const statusMonitor = new StatusMonitor(brain);
           statusMonitor.openDialogWindow();
           await statusMonitor.dialogPromise; //передать контроль над выполнением кода
-          sendWelcomeMessage(brain);
-          return sendBasicPrompt();
+          return;
         }
         case "exit":
         case "quit": {

@@ -1,8 +1,7 @@
 {
   "name": "minecraft-assistants",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Minecraft bots that can do some of your routine work for you.",
-  "main": "main.js",
   "type": "module",
   "scripts": {
     "dev": "rm -r ./dist; npx tsc --watch",
@@ -26,11 +25,13 @@
   },
   "homepage": "https://github.com/dtkdtk/minecraft-assistants#readme",
   "devDependencies": {
+    "@types/ini": "^4.1.1",
     "@types/node": "^24.0.3",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
+    "ini": "^5.0.0",
     "minecraft-data": "^3.90.0",
     "mineflayer": "^4.29.0",
     "mineflayer-pathfinder": "^2.4.5",

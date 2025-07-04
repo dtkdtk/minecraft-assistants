@@ -1,40 +1,32 @@
 # minecraft-assistants
 
-# TODO
+Minecraft bots that can do some of your routine work for you.
 
-- [ ] Сделать возможность указывать засаживаемые семена в модуле фермы
-- [ ] Распорядок дня (работа, ланч, работа, отдых, сон)
-- [ ] Перевести проект на английский язык
-- [ ] Специальная команда для просмотра логов (предупреждений). Будет диалоговое окно, что-то похожее на монитор состояния.
-  Возможности:
-  - [ ] Пагинация (распределение по страницам)
-  - [ ] Авто-обновление (как в мониторе состояния)
-  - [ ] Фильтрация по имени модуля
-  - [ ] Кнопка сворачивания, чтобы убрать спам
-  - [ ] Отображение времени получения предупреждения 
-  - [ ] Возможность очистки списка предупреждений
-  - [ ] (БУДУЩЕЕ) Информация о том, как исправить ошибку
-- [ ] Улучшить стабильность (глобальная обработка ошибок (чтобы бот не падал), больше проверок, обработка аварий / внештатных ситуаций)
-- [ ] Система плагинов (внешних, user-editable)
-- [ ] Упаковка кода в единый JS-скрипт (инструмент: esbuild)
-- [ ] Возможно сменить БД (на MongoDB / Redis)
-- [ ] Починить `mineflayer-pathfinder`, в частности - взаимодействие с дверьми
-- [ ] TerminalApp: настройки с пред-валидацией
-- [ ] Соглашение о сайд-эффектах прерывающих задач. Если у прерывающей задачи нет сайд-эффектов (состояние бота ДО задачи == состояние бота ПОСЛЕ задачи), можно не начинать выполнение прерываемой функции лишний раз заново.
-
-- [ ] control_panel: Починить повторное открытие терминала
-- [ ] control_panel: Починить съезд экрана при нажатии клавиши Escape
+> [!WARNING]\
+> Current status: **IN DEVELOPMENT** (not ready for use)
 
 
 
-# Общая структура проекта `minecraft-assistants`:
+### Core features progress table:
 
-- Сами ассистенты (каждый процесс = отдельный бот) (включая интерфейсы взаимодействия: TerminalApp/CLI+RCON/HTTP-API)
-    | Стек: TypeScript, mineflayer, nedb, esbuild
-- Хаб ассистентов (общение через CLI)
-    | Стек: C++, графическая библиотека, (возможно) сетевая библиотека
-    |  ...либо C#
-    |  ...либо вообще Java/Kotlin (хороший вариант) 
-- Интеграция с майнкрафт-миром (скорее всего, в виде клиентского мода и серверного плагина)
-    | Стек клиента: Java/Kotlin, Fabric, мб какие-то компоненты из WorldEditCUI
-    | Стек сервера: Java/Kotlin, Bukkit/Spigot/Paper
+Feature | Status
+--------|-------
+Job management: prioritized queue, interruption, single-state mechanism | ✅ Completed
+Configuration & Settings | ⏳ In progress
+AI: Auto-eating | ☑ Minimum completed
+AI: Auto-sleeping | ⚠ Minimum completed; Buggy
+AI: Defense & Avoidance | ❌ Not done
+AI: Attacking & PVP/PVE | ❌ Not done
+Fault tolerance, user-friendly error reporting | ❌ Not done
+Multiple bots management | ❌ Not done
+(prod) `minecraft-data` version management | ❌ Not done
+(prod) Auto-updating | ❌ Not done
+Http-API | ❌ Not done
+GUI application | ❌ Not done
+
+
+
+### Bot skills progress table:
+Skill | Status
+------|-------
+Farm: planting, harvesting, re-plowing | ⏳ In progress

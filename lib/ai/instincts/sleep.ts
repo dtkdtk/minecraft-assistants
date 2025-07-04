@@ -37,6 +37,10 @@ export default class Mod_Sleep {
       priority: JobPriority.Foreground,
       validate: async () => this.checkTime(),
       execute: async () => await this.whenNight(),
+      finalize: async () => {
+        this.B.bot.pathfinder.stop();
+        await this.B.bot.wake().catch(() => {});
+      },
     })
   }
   
@@ -45,7 +49,7 @@ export default class Mod_Sleep {
   }
   
   /** Возвращает успех/неудачу */
-  async whenNight(): Promise<boolean> {
+  async whenNight(jobPromisePause?: () => Promise<void> | undefined): Promise<boolean> {
     const bedPoint = await this.getBedLocation();
     if (bedPoint === null) return false;
     const movements = new Movements(this.B.bot); /* TODO: 'movements.canDig' & other options configuration */
@@ -55,6 +59,7 @@ export default class Mod_Sleep {
     this.B.bot.pathfinder.setMovements(movements);
     debugLog(`Going to bed at ${stringifyCoordinates(bedPoint)}`);
     await this.B.bot.pathfinder.goto(goal);
+    if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return false;
 
     /* TODO: Relocate (заново найти) кровать если блок отсутствует.
       Поиск будет по команде / по настройке. */
@@ -68,6 +73,8 @@ export default class Mod_Sleep {
       return false;
     }
     await this.B.bot.sleep(block);
+    if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return false;
+    
     await Promise.all([
       new Promise<void>((pReturn) => {
         setInterval(() => this.checkTime() ? undefined : pReturn(), DAY_CHECK_INTERVAL);

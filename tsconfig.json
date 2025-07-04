@@ -1,7 +1,7 @@
 {
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.js", "__PRIVATE__/transaction_chain.ts",
+    "./lib/**/*.ts",
+    "./lib/**/*.js",
   ],
   "exclude": [
     "./node_modules/**/*",
@@ -16,7 +16,7 @@
 
     "strict": true,
     "resolveJsonModule": true,
-    "rootDir": "./src/",
+    "rootDir": "./lib/",
     "outDir": "./dist/",
 
     "removeComments": true,
