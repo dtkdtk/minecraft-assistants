@@ -4,6 +4,7 @@ import { JobPriority } from "../types.js";
 import Mod_ChatCommands from "./instincts/chat_commands.js";
 import Mod_Eat from "./instincts/eat.js";
 import Mod_Sleep from "./instincts/sleep.js";
+import Mod_Farm from "./skills/farm.js"
 
 export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   constructor(public bot: Bot) {
@@ -13,6 +14,7 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     this.i_ChatCommands = new Mod_ChatCommands(this);
     this.i_Eat = new Mod_Eat(this);
     this.i_Sleep = new Mod_Sleep(this);
+    this.i_Farm = new Mod_Farm(this);
     process.once("SIGINT", async () => await this.exitProcess());
     process.once("exit", wrongExitCallback);
   }
@@ -20,6 +22,7 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   i_ChatCommands;
   i_Eat;
   i_Sleep;
+  i_Farm;
   warningsQueue: string[] = [];
   jobs: Job[] = [];
 
