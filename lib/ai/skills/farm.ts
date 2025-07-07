@@ -19,15 +19,15 @@ const chestPoint: LocationPoint = {
   key: "chestPoint",
   type: LocationType.Point,
   
-  x: 280,   // 280, 64, 300
-  y: 64,
-  z: 300,   // 260, 65, 280
+  x: 260,   // 280, 64, 300
+  y: 65,
+  z: 280,   // 260, 65, 280
 }
 
 export default class Mod_Farm {
   
   constructor(private readonly B: Brain) {
-    // this.update();
+    //this.update();
   }
 
   // cd test; node test_bot.js    // it's for me
@@ -48,17 +48,17 @@ export default class Mod_Farm {
   }
 
   testV() {
-    debugLog("VALIDATE TESTED SUCCESFULLY");
+    debugLog("VALIDATE TESTED SUCCESSFULLY");
     return true;
   }
 
   testE() {
-    debugLog("EXECUTE TESTED SUCCESFULLY");
+    debugLog("EXECUTE TESTED SUCCESSFULLY");
     return true;
   }
 
   testF() {
-    debugLog("FINALIZE TESTED SUCCESFULLY");
+    debugLog("FINALIZE TESTED SUCCESSFULLY");
     return true;
   }
 
@@ -143,7 +143,7 @@ export default class Mod_Farm {
         const seedsItem = itemsInChest.find(item => item && SEEDS.includes(item.name));
         if (seedsItem) {
           await chest.withdraw(seedsItem.type, null, seedsItem.count);
-          debugLog(`Взял семена: ${seedsItem.name}`);
+          debugLog(`I took seeds: ${seedsItem.name}`);
           tookItems = true;
       } 
     }
