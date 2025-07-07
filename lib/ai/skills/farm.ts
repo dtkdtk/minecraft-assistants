@@ -4,26 +4,24 @@ import { Item } from "prismarine-item";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
 import assert from "assert"; // Don't delete !
-import { debuglog } from "util";
-import { debug } from "console";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Farm"
 
-const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "netherite_hoe"];
-const HOES_IDS = [290, 291, 292, 293, 494];
+const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
+const HOES_IDS = [290, 291, 292, 293, 294, 494];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
 const SEEDS_IDS = [295, 457, 391, 392];
-const kLocationChest = "chest" 
-const kJobFarming = Symbol("job:farm")
+const kLocationChest = "chest" ;
+const kJobFarming = Symbol("job:farm");
 
 const chestPoint: LocationPoint = {
   key: "chestPoint",
   type: LocationType.Point,
   
-  x: 280,
+  x: 280,   // 280, 64, 300
   y: 64,
-  z: 300,
+  z: 300,   // 260, 65, 280
 }
 
 export default class Mod_Farm {
@@ -32,9 +30,9 @@ export default class Mod_Farm {
     // this.update();
   }
 
-  // cd test; node test_bot.js // it's for me
+  // cd test; node test_bot.js    // it's for me
 
-  // It's main metod.
+  // It's main metod, that adding in brain's job's queue a job.
   update() {
     this.B.addJob({
       cursor: 0,
@@ -50,17 +48,17 @@ export default class Mod_Farm {
   }
 
   testV() {
-    console.log("VALIDATE TESTED SUCCESFULLY");
+    debugLog("VALIDATE TESTED SUCCESFULLY");
     return true;
   }
 
   testE() {
-    console.log("EXECUTE TESTED SUCCESFULLY");
+    debugLog("EXECUTE TESTED SUCCESFULLY");
     return true;
   }
 
   testF() {
-    console.log("FINALIZE TESTED SUCCESFULLY");
+    debugLog("FINALIZE TESTED SUCCESFULLY");
     return true;
   }
 
@@ -68,13 +66,13 @@ export default class Mod_Farm {
   async getReadyToPlant() {
     if (!this.hasNeededItems()) {
       debugLog("I hasn't needed items; trying to find it...");
-      if (!(await this.takeNeededItems())) return false;
+      if (!await this.takeNeededItems()) return false;
     }
-    debugLog("I took needed items.")
+    debugLog("I have needed items.");
     return true;
   }
 
-  // Did bot have item?
+  // Did bot have needed item?
   hasNeededItems() {
     const inventoryItems = this.B.bot.inventory.items();
     if (!(inventoryItems.some((item: Item | null) => 
@@ -91,8 +89,8 @@ export default class Mod_Farm {
   // If haven't needed items, taking it
   async takeNeededItems() {
     // Going to the chest
-    if (!this.goToChest()) {
-      this.B.warn(`[${MODULE_NAME}] Cannot go to the chest.`)
+    if (!await this.goToChest()) {
+      this.B.warn(`[${MODULE_NAME}] Cannot reach the chest.`);
       return false;
     }    
     const chestBlock = this.B.bot.blockAt(new Vec3(chestPoint.x, chestPoint.y, chestPoint.z));
@@ -106,42 +104,57 @@ export default class Mod_Farm {
     };
 
     // Opening the chest
+    await this.B.bot.lookAt(chestBlock.position.offset(0.5, 0.5, 0.5));
+    debugLog("I looked at the chest.")
+    await new Promise(resolve => setTimeout(resolve, +Durat.sec(0.5)))
     const chest = await this.B.bot.openChest(chestBlock)
-    const itemsInChest = chest.items();
-    if (itemsInChest === null) {
+    const itemsInChest = chest.containerItems();
+
+
+    if (itemsInChest.length == 0) {
       this.B.warn(`[${MODULE_NAME}] There is no items in the chest.`);
-      this.B.bot.closeWindow;
+      chest.close();
       return false;
     }
 
-    // Taking items from chest
+    const hasChestHoe = itemsInChest.some(item => item && HOES.includes(item.name));
+    const hasChestSeeds = itemsInChest.some(item => item && SEEDS.includes(item.name));
+    if (!hasChestHoe || !hasChestSeeds) {
+      this.B.warn(`[${MODULE_NAME}] There is no needed items in the chest.`);
+      chest.close();
+      return false;
+    }
+
+    // Taking needed items
+    let tookItems = false
     const inventoryItems = this.B.bot.inventory.items();
     if (!(inventoryItems.some((item: Item | null) => 
       item !== null && HOES.includes(item.name)))) {
-      if (!(itemsInChest.some((item: Item | null) => 
-        item !== null && HOES.includes(item.name)))) {
-          this.B.warn(`[${MODULE_NAME}] Can't find any hoe in the chest.`)
-          return false;
-        } else { for (const hoe_id of HOES_IDS) try {
-          const itemStack = await chest.withdraw(hoe_id, null, 1);
-        } catch (err) {
-          continue;
-        }}
-      }
-    if (!(inventoryItems.some((item: Item | null) => 
-      item !== null && SEEDS.includes(item.name)))) {
-      if (!(itemsInChest.some((item: Item | null) => 
-        item !== null && SEEDS.includes(item.name)))) {
-          this.B.warn(`[${MODULE_NAME}] Can't find any seeds in the chest.`)
-          return false;
-        } else { for (const seed_id of SEEDS_IDS) try {
-          const itemStack = await chest.withdraw(seed_id, null, 64);
-        } catch (err) {
-          continue;
-        }}
-      }
+        const hoeItem = itemsInChest.find(item => item && HOES.includes(item.name));
+        if (hoeItem) {
+          await chest.withdraw(hoeItem.type, null, 1);
+          debugLog(`I took hoe: ${hoeItem.name}`);
+          tookItems = true;
+        }
+    }
     
-    this.B.bot.closeWindow;
+    if (!(inventoryItems.some((item: Item | null) => 
+      item !== null && HOES.includes(item.name)))) {
+        const seedsItem = itemsInChest.find(item => item && SEEDS.includes(item.name));
+        if (seedsItem) {
+          await chest.withdraw(seedsItem.type, null, seedsItem.count);
+          debugLog(`Взял семена: ${seedsItem.name}`);
+          tookItems = true;
+      } 
+    }
+
+    if (!tookItems) {
+      chest.close();
+      debugLog("I haven't tooked needeed items.")
+      return false;
+    }
+
+    chest.close();
     debugLog("I took needed items.");
     return true;
   }
@@ -151,7 +164,7 @@ export default class Mod_Farm {
     // Taking chest's coordinates
     const chestPoint = await this.getChestLocation();
     if (chestPoint === null) {
-      this.B.warn("Can't get chest location.")
+      this.B.warn("Can't get chest location.");
       return false;
     }
 
@@ -163,11 +176,12 @@ export default class Mod_Farm {
         return true;
     }
 
-    // Stopping any others moves (DON'T WORK)
-    // if (this.B.bot.pathfinder.isMoving()) {
-    //   this.B.bot.pathfinder.stop();
-    //   await new Promise(resolve => setTimeout(resolve, +Durat.sec(1)));
-    // }
+    // Stopping any others moves
+    if (this.B.bot.pathfinder.isMoving()) {
+      this.B.bot.pathfinder.stop();
+      debugLog("I stopped any others moves.");
+      await new Promise(resolve => setTimeout(resolve, +Durat.sec(0.5)));
+    }
 
     // Set's mineflayer-pathfinder's movements
     const movements = new Movements(this.B.bot);
@@ -176,18 +190,18 @@ export default class Mod_Farm {
     this.B.bot.pathfinder.setMovements(movements);
 
     const goal = new goals.GoalNear(chestPoint.x, chestPoint.y, chestPoint.z, 1);
-    debugLog(`Going to chest at ${stringifyCoordinates(chestPoint)}`);
+    debugLog(`Going to chest at ${stringifyCoordinates(chestPoint)}...`);
 
-    // Try to reach the chest
+    // Trying to reach the chest
     try {
       await this.B.bot.pathfinder.goto(goal);
-      debuglog("Bot reached the chest.");
-      return true;
     } catch (err) {
       this.B.warn(`[${MODULE_NAME}] Movements error.`);
       return false;
     } finally {
       this.B.bot.pathfinder.setGoal(null);
+      debugLog("Bot reached the chest.");
+      return true;
     }
   }
 
