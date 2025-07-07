@@ -1,10 +1,9 @@
 import { Bot } from "mineflayer";
 import type { Job, JobUnit } from "../types.js";
-import { JobPriority } from "../types.js";
 import Mod_ChatCommands from "./instincts/chat_commands.js";
 import Mod_Eat from "./instincts/eat.js";
 import Mod_Sleep from "./instincts/sleep.js";
-import Mod_Farm from "./skills/farm.js"
+import Mod_Farm from "./skills/farm.js";
 
 export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   constructor(public bot: Bot) {
@@ -37,14 +36,17 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   addJob(J: Job) {
     if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier))
       return;
-    else if (J.priority > (this.currentJob()?.priority ?? 0))
-      this._handleJobInterruption(J).then(() => this._startJobExecution());
+    else if (this.jobs.length > 0 && J.priority > (this.currentJob()?.priority ?? 0)) {
+      const interrupt = () => this._handleJobInterruption(J);
+      if (this._jobInterruptionProcess) this._jobInterruptionProcess.then(interrupt);
+      else interrupt();
+    }
     else {
       this.jobs.push(J);
       this._startJobExecution();
     }
   }
-  async exitProcess() {
+  async exitProcess(): Promise<never> {
     console.log("Saving databases before exit...");
     for (const [dbName, database] of Object.entries(DB)) {
       database.stopAutocompaction();
@@ -67,32 +69,46 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   private _jobInterruptionProcess: Promise<void> | undefined;
   private _jobExecutionProcess: Promise<void> | undefined;
   private _startJobExecution() {
-    if (this._jobExecutionProcess) return;
+    if (this._jobExecutionProcess && !this._jobInterruptionProcess) return;
     this._sortJobsQueue();
     this._jobExecutionProcess = this._initJobExecProcess();
     this._jobExecutionProcess.then(() => this._jobExecutionProcess = undefined);
   }
   private async _initJobExecProcess() {
     while (this.jobs.length > 0) {
-      const J = this.currentJobUnit()!;
-      await this._invokeJob(J).catch(error => this._handleJobInvocationError(error));
+      let JU: JobUnit;
+      const currentJob = this.currentJob()!;
+      if (isAggregateJob(currentJob)) {
+        if (currentJob.cursor == (currentJob.jobs.length - 1)) {
+          this.jobs.shift();
+          continue;
+        }
+        else JU = currentJob.jobs[currentJob.cursor++];
+      }
+      else JU = currentJob;
+        
+      await this._invokeJob(JU).catch(error => this._handleJobInvocationError(error));
     }
   }
-  private async _invokeJob(J: JobUnit) {
+  private async _invokeJob(J: JobUnit): Promise<void> {
     if (J.promisePause !== undefined) return;
     if (J.validate) {
       const isActual = await J.validate();
       if (!isActual) return;
     }
+    let result: boolean = true;
     
     if (J.promisePause !== undefined) return;
-    if (J.prepare) await J.prepare();
+    if (J.prepare) result = await J.prepare()
+    if (!result) return await J.failure?.();
     
     if (J.promisePause !== undefined) return;
-    await J.execute();
+    result = await J.execute();
+    if (!result) return await J.failure?.();
     
     if (J.promisePause !== undefined) return;
-    if (J.finalize) await J.finalize();
+    if (J.finalize) result = await J.finalize();
+    if (!result) return await J.failure?.();
   }
   private _handleJobInvocationError(error: any) {
     if (error instanceof BrainIgnoredError) return;
@@ -108,13 +124,15 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   private async _handleJobInterruption(J: Job) {
     const current = this.currentJob();
     this.jobs.unshift(J);
-    let unpauseFn, rejectPauseFn;
+    let unpauseFn: SomeFunction | undefined, rejectPauseFn: SomeFunction | undefined;
     const promisePause = new Promise<void>((res, rej) => { unpauseFn = res; rejectPauseFn = rej });
     if (current !== undefined) {
       current.promisePause = promisePause;
       await current.finalize?.().catch(() => {});
     }
+    this._jobInterruptionProcess = undefined;
     this._startJobExecution();
+    unpauseFn?.();
   }
 }
 

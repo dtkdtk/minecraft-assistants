@@ -27,6 +27,13 @@ const chestPoint: LocationPoint = {
 export default class Mod_Farm {
   
   constructor(private readonly B: Brain) {
+    this.B.addJob({
+      jobIdentifier: Symbol(),
+      jobDisplayName: "Infinity",
+      createdAt: Date.now(),
+      priority: JobPriority.Whenever,
+      execute: () => new Promise(() => {}),
+    });
     //this.update();
   }
 
