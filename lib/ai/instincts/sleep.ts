@@ -40,6 +40,7 @@ export default class Mod_Sleep {
       finalize: async () => {
         this.B.bot.pathfinder.stop();
         await this.B.bot.wake().catch(() => {});
+        return true;
       },
     })
   }

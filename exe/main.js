@@ -231,5 +231,5 @@ function resolveMinimumVersion(versionString = undefined) {
 
 
 
-__MAIN__();
+await __MAIN__();
 rl.close();
