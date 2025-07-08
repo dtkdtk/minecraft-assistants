@@ -130,9 +130,13 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
       current.promisePause = promisePause;
       await current.finalize?.().catch(() => {});
     }
+    const execution = this._jobExecutionProcess;
+    this._jobExecutionProcess = undefined;
     this._jobInterruptionProcess = undefined;
     this._startJobExecution();
+    this._jobExecutionProcess = execution;
     unpauseFn?.();
+    if (current !== undefined) current.promisePause = undefined;
   }
 }
 
