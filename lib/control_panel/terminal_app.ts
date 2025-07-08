@@ -10,7 +10,7 @@ let __rl: libReadline.Interface;
 export const rl = () => __rl ?? (__rl = createReadline());
 
 /**
- * Обрабатывает ввод с командной строки.
+ * Handles command line input.
  * @returns infinity promise
  */
 export function setupCommandLineInterface(brain: Brain): Promise<never> {
@@ -39,7 +39,7 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
         case "stat": {
           const statusMonitor = new StatusMonitor(brain);
           statusMonitor.openDialogWindow();
-          await statusMonitor.dialogPromise; //передать контроль над выполнением кода
+          await statusMonitor.dialogPromise; //transfer control over code execution
           return;
         }
         case "exit":

@@ -26,13 +26,13 @@ export default class Mod_Eat {
     this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
   }
 
-  /** Возвращает успех/неудачу */
+  /** Returns success/failure */
   async whenHungry(extreme: boolean, jobPromisePause?: () => Promise<void> | undefined): Promise<boolean> {
-    /* Ищем еду в инвентаре. Находим - едим.
-      Не нашли - сообщаем Мозгу. */
+    /* Trying to find food in the inventory. If we found, we will eat it.
+      If we didn't find, tell the brain. */
     const food = this.findFood();
     if (!food) {
-      //TODO: пойти взять еду
+      //TODO: go look for food
       if (this._lastHungryMessage + +Durat.min(3) < Date.now()) {
         this._lastHungryMessage = Date.now();
         this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.food}`);
@@ -43,11 +43,11 @@ export default class Mod_Eat {
     await this.activateFoodItem();
     await this.B.bot.unequip("hand");
     
-    /* Если задача приостановлена / отменена - не судьба;
-      функция update() всё равно добавит новую задачу, если потребуется. */
+    /* If the job is cancelled/paused, just get over it;
+      the update() method will add a new job if it is needed */
     if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return true;
 
-    //Может, нам нужно ещё поесть?
+    //Maybe we need to eat more?
     if (this.checkSaturation() != 0) return await this.whenHungry(false);
     return true;
   }
@@ -72,7 +72,7 @@ export default class Mod_Eat {
     this.B.addJob(new Job_EatFood(this));
   }
 
-  /** `2` = сильное голодание, `1` = голодание, `0` = всё ОК */
+  /** '2' = extreme hunger, '1' = hunger, '0' = OK */
   checkSaturation(): 2 | 1 | 0 {
     if (this.B.bot.food <= EXTREME_SATURATION)
       return 2;
@@ -84,8 +84,8 @@ export default class Mod_Eat {
   }
 
   /**
-   * В данный момент, бот ищет самую ДЕШЁВУЮ еду.
-   * TODO: учёт ХП, восстановление здоровья едой.
+   * Currently the bot is searching for the cheapest food.
+   * TODO: take into account HP; healing by food
    */
   findFood() {
     let currentBestChoice: Item | null = null;
@@ -102,7 +102,6 @@ export default class Mod_Eat {
 
 
 
-/** Создаётся, когда боту требуется поесть еды. */
 class Job_EatFood implements JobUnit {
   jobIdentifier: symbol | null;
   jobDisplayName: string;

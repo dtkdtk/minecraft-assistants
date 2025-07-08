@@ -1,6 +1,6 @@
 /*
-  Инициализирует все известные на данный момент файлы,
-  в которых есть глобальные переменные / функции / классы (сущности).
+  Initializes all currently known files that contain
+  global variables / functions / classes (entities).
 */
 import { default as Nedb } from "@seald-io/nedb";
 import "./lib/actqueue.js";
@@ -54,7 +54,7 @@ Object.defineProperties(global, {
   },
   DB: {
     value: {
-      /* Путь отсчитывается относительно CWD (Current Working Directory), а не файла 'configStore.ts' */
+      /* The path is relative to the CWD (Current Working Directory) */
       common: new Datastore({ filename: "./data/common.db", autoload: true }),
       locations: new Datastore({ filename: "./data/locations.db", autoload: true }),
     }

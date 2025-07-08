@@ -1,12 +1,6 @@
-# Как работает ИИ бота
+### How does the AI ​​bot work
 
-## (тезис)
+The principle of the AI ​​bot is based on processing tasks (jobs).
+The brain is responsible for managing tasks, and the intelligence modules are responsible for providing the logic for their execution.
 
-Принцип работы ИИ бота основан на обработке задач (jobs) и рефлексии на сигналы.
-За управление задачами отвечает мозг, а за предоставление логики их исполнения - модули интеллекта.
-
-## 1. Мозг
-
-Содержит приоретизированную очередь выполнения задач. Бот выполняет задачу с самым большим приоритетом.
-
-## 2. Модули интеллекта
+The brain contains a prioritized queue of tasks. The bot performs the task with the highest priority.

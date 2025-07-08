@@ -39,7 +39,6 @@ export default class Mod_Farm {
 
   // cd test; node test_bot.js    // it's for me
 
-  // It's main metod, that adding in brain's job's queue a job.
   update() {
     this.B.addJob({
       cursor: 0,
@@ -69,7 +68,6 @@ export default class Mod_Farm {
     return true;
   }
 
-  // Did bot ready to plant?
   async getReadyToPlant() {
     if (!this.hasNeededItems()) {
       debugLog("I hasn't needed items; trying to find it...");
@@ -79,7 +77,6 @@ export default class Mod_Farm {
     return true;
   }
 
-  // Did bot have needed item?
   hasNeededItems() {
     const inventoryItems = this.B.bot.inventory.items();
     if (!(inventoryItems.some((item: Item | null) => 
@@ -93,7 +90,6 @@ export default class Mod_Farm {
     return true;
   }
 
-  // If haven't needed items, taking it
   async takeNeededItems() {
     // Going to the chest
     if (!await this.goToChest()) {
@@ -157,7 +153,7 @@ export default class Mod_Farm {
 
     if (!tookItems) {
       chest.close();
-      debugLog("I haven't tooked needeed items.")
+      debugLog("I didn't take any needed items.")
       return false;
     }
 
@@ -166,16 +162,15 @@ export default class Mod_Farm {
     return true;
   }
 
-  // How to go to chest
   async goToChest(): Promise<boolean> {
-    // Taking chest's coordinates
+    // Taking the chest's coordinates
     const chestPoint = await this.getChestLocation();
     if (chestPoint === null) {
-      this.B.warn("Can't get chest location.");
+      this.B.warn("Cannot get chest location.");
       return false;
     }
 
-    // Haven't bot already at the chest?
+    // Didn't the bot already gone to the chest?
     const botPos = this.B.bot.entity.position;
     const distance = botPos.distanceTo(new Vec3(chestPoint.x, chestPoint.y, chestPoint.z));
     if (distance < 2) {
@@ -190,7 +185,6 @@ export default class Mod_Farm {
       await new Promise(resolve => setTimeout(resolve, +Durat.sec(0.5)));
     }
 
-    // Set's mineflayer-pathfinder's movements
     const movements = new Movements(this.B.bot);
     movements.canDig = false;
     movements.canOpenDoors = true;
@@ -212,7 +206,6 @@ export default class Mod_Farm {
     }
   }
 
-  // Taking chest coordinates
   async getChestLocation(): Promise<LocationPoint | null> {
     // const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
     // assert(locationsStore !== null);

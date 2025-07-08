@@ -1,10 +1,10 @@
 declare global {
   /**
-   * Конвертирует "человеческое" время в "машинное" - часы, минуты, секунды в миллисекунды.
-   * Создано чтобы не путаться с умножениями.
-   * 
-   * Используется как пространство имён; каждый раз создаётся новый объект.
-   * Чтобы превратить в миллисекунды, используйте унарный плюс: `+Durat.sec(30)`
+   * Converts "human" time to "machine" time - hours, minutes, seconds to milliseconds.
+   * Created to avoid confusion with multiplications.
+   *
+   * Used as a namespace; a new object is created each time.
+   * To convert to milliseconds, use unary plus: `+Durat.sec(30)`
    */
   export const Durat: DurationBuilder;
 }

@@ -4,8 +4,8 @@ import { framedTable } from "./terminal_ui.js";
 import { Key } from "readline";
 import { rl } from "./terminal_app.js";
 
-/* Диалоговые окна перехватывают консоль, модифицируя глобальный объект `console`.
-  Внутри диалоговых окон можно открывать другие диалоговые окна; они будут помещаться в специальный стек. */
+/* Dialogs intercept the console by modifying the global `console` object.
+  Dialogs can open other dialogs inside them; they will be placed in a special stack. */
 
 export class DialogWindow {
   onOpen? (): Promise<void> | void;
@@ -54,7 +54,7 @@ export class DialogWindow {
 
 
 
-  /** Перехват контроля над вводом-выводом */
+  /** I/O control hijacking */
   private static _takeControl(controls: Pick<InputOutputControls, "handleKeypress" | "handleLine">) {
     const previousControls = DialogWindow.controlStack.at(-1);
     this._dropControls(previousControls);
@@ -70,7 +70,7 @@ export class DialogWindow {
     DialogWindow.controlStack.push(currentControls);
   }
 
-  /** Возвращение контроля над вводом-выводом предыдущим владельцам */
+  /** Returning control over I/O to previous owners */
   private static _returnControl() {
     const currentControls = DialogWindow.controlStack.pop();
     this._dropControls(currentControls);
@@ -84,8 +84,8 @@ export class DialogWindow {
       process.stdin.removeListener("keypress", controls.handleKeypress);
     if (controls.handleLine)
       rl().removeListener("line", controls.handleLine);
-    rl().emit("line"); /* Подразумевается, что кроме управляемых (диалоговыми окнами)
-      обработчиков событий, других у нас нет */
+    rl().emit("line"); /* It is assumed that we have no other event handlers
+      except those controlled by dialog windows. */
   }
   private static _applyControls(controls: InputOutputControls | undefined) {
     if (!controls) return;
@@ -128,7 +128,7 @@ type InputOutputControls = {
 
 
 
-/* TODO: Добавить авто-прокрутку широких/высоких блоков текста */
+/* TODO: Add auto-scrolling too wide/high text blocks */
 
 export type HorizontalContainer = {
   content: string;
@@ -138,26 +138,26 @@ export type HorizontalRow = HorizontalContainer[] | string;
 
 export class DialogWindowCanvas {
   rows: HorizontalRow[] = [];
-  bottomRows: HorizontalRow[] = []; //строки, отображающиеся в конце экрана (align=bottom)
+  bottomRows: HorizontalRow[] = []; //rows at the bottom of the screen (align=bottom)
 
   constructor(public width: number, public height: number) {}
 
-  /** Добавляет строку **после** ранее добавленных */
+  /** Add row **after** recently added */
   append(row: HorizontalRow): this {
     this.rows.push(row);
     return this;
   }
-  /** Добавляет строку **перед** ранее добавленными */
+  /** Add row **before** recently added */
   prepend(row: HorizontalRow): this {
     this.rows.unshift(row);
     return this;
   }
-  /** Добавляет строку **в конец экрана**, **после** ранее добавленных */
+  /** Add row **at the end** of the screen, **after** recently added */
   bottomAppend(row: HorizontalRow): this {
     this.bottomRows.push(row);
     return this;
   }
-  /** Добавляет строку **в конец экрана**, **перед** ранее добавленными */
+  /** Add row **at the end** of the screen, **before** recently added */
   bottomPrepend(row: HorizontalRow): this {
     this.bottomRows.unshift(row);
     return this;
@@ -168,8 +168,8 @@ export class DialogWindowCanvas {
     return this;
   }
   /**
-   * Примечание: Ответственность за наличие перевода строки на предыдущей
-   * линии текста консоли несёте вы.
+   * Note: It is your responsibility to ensure that
+   * the previous line of console text contains a line break.
    */
   render(): string {
     const topLines = this._renderLinesFrom(this.rows)

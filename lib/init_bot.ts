@@ -17,9 +17,6 @@ const defaultOptions: Required<_OptionalBotOptions> = {
 
 type Options = GeneralBotOptions & Required<_OptionalBotOptions>;
 
-//Здесь будет происходить инициализация бота на готовых параметрах.
-//Сделано, чтобы бота можно было запускать разными способами (в будущем).
-
 export async function createMinecraftAssistantBot(inputOptions: GeneralBotOptions) {
   const options: Options = { ...defaultOptions, ...inputOptions };
   initDebugFn(options.enableDebug);

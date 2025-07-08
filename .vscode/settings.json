@@ -19,6 +19,7 @@
     "pufferfish",
     "RCON",
     "readline",
+    "seald",
     "unequip"
   ],
   "typescript.tsdk": "node_modules\\typescript\\lib"

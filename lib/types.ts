@@ -2,23 +2,23 @@ import * as mf from "mineflayer";
 
 export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "host" | "username" | "port">;
 /**
- * Главные параметры.
- * Задаются при запуске бота.
- */
+* Main parameters.
+* Set when the bot starts.
+*/
 export interface GeneralBotOptions extends _NecessaryBotOptions {
   _mfClientOptionsOverrides?: Partial<mf.BotOptions>;
   /**
-   * Интервал записи баз данных в файлы.
+   * Interval for writing databases to files.
    * @default 3min
    */
   databaseAutosaveInterval?: number;
   /**
-   * Включить отладку? (для разработчиков)
+   * Enable debug? (for developers)
    * @default false
    */
   enableDebug?: boolean;
   /**
-   * Интерактивный режим командной строки. Перманентно блокирует поток ввода-вывода.
+   * Interactive CLI mode. Permanently blocks I/O
    * @default false
    */
   interactiveCli?: boolean;
@@ -27,112 +27,112 @@ export interface GeneralBotOptions extends _NecessaryBotOptions {
 export type Bot = mf.Bot;
 export type BotEvents = mf.BotEvents;
 
-/** Больше приоритет = лучше. */
+/** Higher priority = better. */
 export enum JobPriority {
-  /** При полном отсутствии задач у бота. Выполняется обычно в выходные. */
+  /** If the bot hasn't other jobs. */
   Whenever = 1,
-  /** В свободное время (перерыв на обед / вечернее время). */
+  /** In the free time (lunch time / evening time). */
   FreeTime = 2,
-  /** Обычная работа, трудовая обязанность. */
+  /** Plain job, labor duty. */
   Plain = 3,
-  /** Задачи "переднего плана", которые нужно выполнить здесь и сейчас. */
+  /** "Foreground" jobs need to be completed right now. */
   Foreground = 4,
-  /** Прервать текущую минимальную единицу работы и заняться задачей. */
+  /** Interrupt the current minimum unit of work and work on the job. */
   SoftInterrupt = 101,
-  /** БРОСИТЬ ВСЕ ДЕЛА и СРОЧНО бежать выполнять задачу. */
+  /** STOP EVERYTHING and URGENTLY run to execute the job. */
   ForceInterrupt = 102
 }
 
 /**
- * Минимальная единица работы.
+ * Minimal unit of work.
  */
 export interface JobUnit {
   /**
-   * Системный идентификатор задачи.
-   * Если указан НЕ `null`, задача становится уникальной, и может существовать в очереди задач только в единичном экземпляре
-   * (если задача с этим ID уже есть в очереди, при добавлении такой же ничего не произойдёт)
+   * System ID of the job.
+   * If NOT 'null' is specified, the job becomes unique, and can only exist in the job queue in a single instance
+   * (if a job with this ID already exists in the queue, adding the same one will not cause any problems)
    */
   jobIdentifier: symbol | null;
-  /** Для отображения в П/У и отладки */
+  /** For display in control panel and debugging */
   jobDisplayName: string;
-  /** Тайм-штамп создания (Date.now()) */
+  /** Time-stamp of creation (Date.now()) */
   createdAt: number;
   /**
-   * Системный промис, который резольвится (вызывает `resolve()`), когда задача снимается с паузы,
-   * и реджектится (вызывает `reject()`), когда задача полностью останавливается.
-   * После завершения промиса (resolve()/reject()), значение поля снова будет `undefined`.
-   * 
-   * При создании задачи данное поле нужно опустить (проигнорировать).
+   * A system promise that resolves when the job is unpaused,
+   * and rejects when the job is completely stopped.
+   * After the promise resolves (resolve()/reject()), the field value will be 'undefined' again.
+   *
+   * When creating a job, this field should be omitted (ignored).
    */
   promisePause?: Promise<void> | undefined;
-  /** Приоритет задачи. Больше = приоритетнее. */
+  /** More = better. */
   priority: JobPriority;
-  /** Нужно ли ещё выполнять задачу? */
+  /** Do we still need to execute the job? */
   validate? (): Promise<boolean>;
-  /**
-   * Подготовить бота к выполнению задачи. Возвращает успех/неудачу
-   * 
-   * Используется в двух случаях:
-   * - (1) Обычная задача (`JobUnit`), приготовление к которой занимает очень много времени.
-   * В течение приготовления задача может утратить актуальность (в таком случае, `prepare()` должен вернуть `false`)
-   * - (2) Сложная задача (`AggregateJob`), которая может выполняться "в несколько заходов"
-   * (прерываться, а затем возобновляться) ((может выполняться только часть минимальных единиц работы, а остаток уходит на потом)),
-   * а также требует какого-то ЕДИНОГО приготовления к выполнению всех мин.ед.работы.
-   * Например, `prepare(): "взять семена из сундука"`, а `jobs[i].execute(): "прийти на грядку и посадить семена"`
-   */
+/**
+* Prepare the bot to perform a job. Returns success/failure
+*
+* Used in two cases:
+* - (1) A regular job (`JobUnit`), which takes a very long time to prepare.
+* During preparation, the job may become irrelevant (in which case, `prepare()` should return `false`)
+* - (2) A complex job (`AggregateJob`), which can be performed "in several passes"
+* (interrupted and then resumed) ((only a part of the minimum units of work can be performed, and the rest is left for later)),
+* and also requires some SINGLE preparation for the execution of all the minimum units of work.
+* For example, `prepare(): "take seeds from the chest"`, and `jobs[i].execute(): "go to the garden bed and plant seeds"`
+*/
   prepare? (): Promise<boolean>;
-  /** Выполнить задачу. Возвращает успех/неудачу. */
+  /** @returns success/failure */
   execute(): Promise<boolean>;
-  /** Завершить выполнение задачи. Возвращает успех/неудачу. */
+  /** Stop the job execution / after the job execution. @returns success/failure */
   finalize? (): Promise<boolean>;
-  /** Неудача. Вызывается если задача завершена неуспешно на любом из этапов. */
+  /** Failure. Called if the job fails at any stage. */
   failure? (): Promise<void>;
 }
 
-/* Я каждый раз вспоминаю ферму. Отлично подходит для визуализации задач.
+/* I always remember the farm. Great for visualizing jobs.
+
+  Aggregate job: Work
+  Sub-jobs: Sow wheat (x60, each row = each sub-job)
   
-  Сложная (aggregate) задача: Работать
-  Подзадачи: Засеять пшеницу (х60, каждая грядка = каждая подзадача)
+  Aggregate job:
+  prepare(): Go to chest, Take seeds from chest, Take hoe
+  Only executed when starting an aggregate job (not min.work)
+  finalize(): Put seeds and hoe in chest
+  Executed when completing an aggregate job (regardless of whether there are min.work remaining)
   
-  Сложная (aggregate) задача:
-  prepare(): Прийти к сундуку, Взять семена из сундука, Взять мотыгу
-    Выполняется только при начале выполнения сложной задачи (не мин.ед.работы)
-  finalize(): Сложить семена и мотыгу в сундук
-    Выполняется при завершении выполнения сложной задачи (вне зависимости от того, остались ли ещё мин.ед.работы)
-  
-  Подзадачи:
-  validate(): Уже не засеяна ли пашня?
-    Примечание: создано лишь для логического разделения; вполне можно опустить проверки в `execute()`,
-    однако тогда `prepare()` будет выполняться даже если задача уже выполнена.
-  execute(): Идти сюда, Взять семена в руку, Использовать на пашне
+  Sub-jobs:
+  validate(): Is the field already sown?
+  Note: This is just for logical separation; it is perfectly fine to omit the checks in `execute()`,
+  but then `prepare()` will still execute even if the job is already completed.
+  execute(): Go here, Take seeds in hand, Use on arable land
 */
 
 /**
- * Набор задач. Разделён на минимальные единицы работы.
- * Набор может быть неоднородным (содержать разные задачи).
- * 
- * `.execute()` выполняет одну мин.единицу работы.
+ * A set of jobs. Divided into minimal units of work.
+ * The set may be heterogeneous (contain different jobs).
+ *
+ * `.execute()` executes one minimal unit of work.
  */
 export interface AggregateJob extends JobUnit {
-  /** Индекс выполняемой в данной момент задачи. */
+  /** The index of the currently executing job. */
   cursor: number;
-  /** Набор простых задач. */
+  /** Set of simple jobs. */
   jobs: JobUnit[];
 }
 export type Job = JobUnit | AggregateJob;
 
 export enum LocationType {
-  /** Единичная точка. */
+  /** A single point. */
   Point,
-  /** Двумерный регион (без Y) - прямоугольник. */
+  /** A 2D-region (without Y) - rectangle. */
   Area,
-  /** Трёхмерный регион - куб. */
+  /** A 3D-region - cube. */
   Region,
-  /* TODO: AggregateArea (несколько прямоугольников), AggregateRegion (несколько кубов) */
+  /* TODO: AggregateArea (several areas), AggregateRegion (several regions) */
 }
-/** Точка в мире. */
+/** A single point in the world. */
 export interface LocationPoint {
-  /** Системное имя точки. */
+  /** System name of the point. */
   key: string;
   type: LocationType.Point;
   
@@ -140,9 +140,9 @@ export interface LocationPoint {
   y: number;
   z: number;
 }
-/** Прямоугольный (двумерный) регион (без Y). */
+/** Rectangular (2D) region (without Y). */
 export interface LocationArea {
-  /** Системное имя точки. */
+  /** System name of the point. */
   key: string;
   type: LocationType.Area;
   
@@ -152,9 +152,9 @@ export interface LocationArea {
   x2: number;
   z2: number;
 }
-/** Кубический (трёхмерный) регион. */
+/** Cubical (3D) region. */
 export interface LocationRegion {
-  /** Системное имя точки. */
+  /** System name of the point. */
   key: string;
   type: LocationType.Region;
   
@@ -170,7 +170,7 @@ export type Location = LocationPoint | LocationArea | LocationRegion;
 
 
 
-/** Внутренние (internal) типы баз данных. */
+/** Internal database types. */
 export namespace DatabaseTypes {
   export type KnownModuleNames = "Mod_ChatCommands" | "Mod_Eat" | "Mod_Sleep" | "Mod_Farm";
   export type LocationsDatabase = {

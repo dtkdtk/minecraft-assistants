@@ -13,7 +13,7 @@ const NIGHT_TIME = 12542; /* Magic constant (minecraft ticks) */
 const kLocationBed = "bed";
 const kJobSleep = Symbol("job:sleep");
 
-/* TODO: Аппроксимация времени на путь; движение заранее */
+/* TODO: Approximation of travel time; advance movement */
 
 export default class Mod_Sleep {
   private timer: NodeJS.Timeout | undefined
@@ -49,7 +49,7 @@ export default class Mod_Sleep {
     return this.B.bot.time.timeOfDay > NIGHT_TIME;
   }
   
-  /** Возвращает успех/неудачу */
+  /** Returns success/failure */
   async whenNight(jobPromisePause?: () => Promise<void> | undefined): Promise<boolean> {
     const bedPoint = await this.getBedLocation();
     if (bedPoint === null) return false;
@@ -62,8 +62,8 @@ export default class Mod_Sleep {
     await this.B.bot.pathfinder.goto(goal);
     if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return false;
 
-    /* TODO: Relocate (заново найти) кровать если блок отсутствует.
-      Поиск будет по команде / по настройке. */
+    /* TODO: Re-search for the bed if given bed is missing;
+      Relocation can be set in configuration / settings */
     const block = this.B.bot.blockAt(new Vec3(bedPoint.x, bedPoint.y, bedPoint.z));
     if (block === null) {
       this.B.warn(`[${MODULE_NAME}] Cannot find bed block at ${stringifyCoordinates(bedPoint)}.`);
@@ -101,6 +101,7 @@ export default class Mod_Sleep {
 
   async loadDatabaseDefaults() {
     const found = await DB.locations.findOneAsync({ _id: MODULE_NAME });
+    // ONLY FOR TESTING
     if (!found) await DB.locations.insertAsync({ _id: MODULE_NAME, locations: [{ key: "bed", type: LocationType.Point,
       x: -185, y: 63, z: 412 }] });
   }

@@ -1,11 +1,9 @@
-# Здесь - всё, что относится к панели управления ботом (CLI, интерфейс командной строки)
+# Here - everything that relates to the bot control panel (CLI, command line interface)
 
-Примечание: имеется в виду п/у *текущим* ботом.
+Note: this refers to the *current* bot.
 
+### DEV notes:
 
-
-### DEV-заметки:
-
-- Насчёт обработки ввода (stdin: keypress, readline: line): Используем ТОЛЬКО управляемые (диалоговыми окнами) обработчики.
-Создание иных обработчиков *напрямую* может привести к неожиданным последствиям.
-- Следует оформлять ВСЁ как диалоговые окна. При любой перехватке ввода и для любых интерактивных команд (не тех, где "ввёл команду - получил результат") используем диалоговые окна.
+- About input handling (stdin: keypress, readline: line): Use ONLY handlers controlled by (dialog windows).
+Creating other handlers *directly* can lead to unexpected consequences.
+- EVERYTHING should be formatted as dialog windows. For any input interception and for any interactive commands (not those where "entered a command - got a result"), use dialog windows.

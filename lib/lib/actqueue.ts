@@ -1,5 +1,5 @@
 /**
- * Очередь действий. Выполняет указанные действия равномерно, через равные временные промежутки.
+ * Action queue. Performs specified actions evenly, at equal time intervals.
  */
 export class ActionQueue
 {
