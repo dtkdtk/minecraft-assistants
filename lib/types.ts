@@ -2,9 +2,9 @@ import * as mf from "mineflayer";
 
 export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "host" | "username" | "port">;
 /**
-* Main parameters.
-* Set when the bot starts.
-*/
+ * Main parameters.
+ * Set when the bot starts.
+ */
 export interface GeneralBotOptions extends _NecessaryBotOptions {
   _mfClientOptionsOverrides?: Partial<mf.BotOptions>;
   /**
@@ -69,17 +69,17 @@ export interface JobUnit {
   priority: JobPriority;
   /** Do we still need to execute the job? */
   validate? (): Promise<boolean>;
-/**
-* Prepare the bot to perform a job. Returns success/failure
-*
-* Used in two cases:
-* - (1) A regular job (`JobUnit`), which takes a very long time to prepare.
-* During preparation, the job may become irrelevant (in which case, `prepare()` should return `false`)
-* - (2) A complex job (`AggregateJob`), which can be performed "in several passes"
-* (interrupted and then resumed) ((only a part of the minimum units of work can be performed, and the rest is left for later)),
-* and also requires some SINGLE preparation for the execution of all the minimum units of work.
-* For example, `prepare(): "take seeds from the chest"`, and `jobs[i].execute(): "go to the garden bed and plant seeds"`
-*/
+  /**
+   * Prepare the bot to perform a job. Returns success/failure
+   *
+   * Used in two cases:
+   * - (1) A regular job (`JobUnit`), which takes a very long time to prepare.
+   * During preparation, the job may become irrelevant (in which case, `prepare()` should return `false`)
+   * - (2) A complex job (`AggregateJob`), which can be performed "in several passes"
+   * (interrupted and then resumed) ((only a part of the minimum units of work can be performed, and the rest is left for later)),
+   * and also requires some SINGLE preparation for the execution of all the minimum units of work.
+   * For example, `prepare(): "take seeds from the chest"`, and `jobs[i].execute(): "go to the garden bed and plant seeds"`
+   */
   prepare? (): Promise<boolean>;
   /** @returns success/failure */
   execute(): Promise<boolean>;
@@ -92,13 +92,13 @@ export interface JobUnit {
 /* I always remember the farm. Great for visualizing jobs.
 
   Aggregate job: Work
-  Sub-jobs: Sow wheat (x60, each row = each sub-job)
+  Sub-jobs: Sow wheat (x60, each block = each sub-job)
   
   Aggregate job:
   prepare(): Go to chest, Take seeds from chest, Take hoe
-  Only executed when starting an aggregate job (not min.work)
+  Only executed when starting an aggregate job (not min.un.work)
   finalize(): Put seeds and hoe in chest
-  Executed when completing an aggregate job (regardless of whether there are min.work remaining)
+  Executed when completing an aggregate job (regardless of whether there are min.un.work remaining)
   
   Sub-jobs:
   validate(): Is the field already sown?
