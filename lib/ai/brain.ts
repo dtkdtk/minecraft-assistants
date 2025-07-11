@@ -8,8 +8,9 @@ import Mod_Farm from "./skills/farm.js";
 export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   constructor(public bot: Bot) {
     super();
-    /* Модули должны быть инициализированы именно в конструкторе,
-      ибо при создании поля класса Brain, 'bot' равняется 'undefined' (инициализация полей вызывается раньше конструктора). */
+    /* Modules must be initialized in the constructor,
+      because when creating a field of the Brain class, 'bot' equals 'undefined'
+      (initialization of fields is called before the constructor). */
     this.i_ChatCommands = new Mod_ChatCommands(this);
     this.i_Eat = new Mod_Eat(this);
     this.i_Sleep = new Mod_Sleep(this);
@@ -37,7 +38,10 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier))
       return;
     else if (this.jobs.length > 0 && J.priority > (this.currentJob()?.priority ?? 0)) {
-      const interrupt = () => this._handleJobInterruption(J);
+      const interrupt = () => this._handleJobInterruption(J).then(() => {
+        this.jobs.shift();
+        this._startJobExecution();
+      });
       if (this._jobInterruptionProcess) this._jobInterruptionProcess.then(interrupt);
       else interrupt();
     }
@@ -46,6 +50,7 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
       this._startJobExecution();
     }
   }
+
   async exitProcess(): Promise<never> {
     console.log("Saving databases before exit...");
     for (const [dbName, database] of Object.entries(DB)) {
@@ -65,17 +70,23 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
 
 
 
-  /** Процесс прерывания задачи. Резольвится, когда прерывание текущей задачи окончено. */
   private _jobInterruptionProcess: Promise<void> | undefined;
-  private _jobExecutionProcess: Promise<void> | undefined;
+  private _jobExecutionStatus: boolean = false;
+  private _onJobExecutionComplete?: AnyFunction;
+
   private _startJobExecution() {
-    if (this._jobExecutionProcess && !this._jobInterruptionProcess) return;
+    if (this._jobExecutionStatus || this._jobInterruptionProcess) return;
     this._sortJobsQueue();
-    this._jobExecutionProcess = this._initJobExecProcess();
-    this._jobExecutionProcess.then(() => this._jobExecutionProcess = undefined);
+    this._initJobExecProcess();
   }
   private async _initJobExecProcess() {
+    let stopped = false; /* anti race-of-states */
+    if (this.jobs.length > 0) this._jobExecutionStatus = true;
     while (this.jobs.length > 0) {
+      if (this._jobExecutionStatus == false) {
+        stopped = true;
+        break;
+      }
       let JU: JobUnit;
       const currentJob = this.currentJob()!;
       if (isAggregateJob(currentJob)) {
@@ -88,6 +99,11 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
       else JU = currentJob;
         
       await this._invokeJob(JU).catch(error => this._handleJobInvocationError(error));
+      this.jobs.shift();
+    }
+    if (!stopped) {
+      this._jobExecutionStatus = false;
+      if (this._onJobExecutionComplete) setImmediate(() => this._onJobExecutionComplete!());
     }
   }
   private async _invokeJob(J: JobUnit): Promise<void> {
@@ -118,25 +134,23 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     this.jobs.sort((A, B) => B.priority - A.priority);
   }
   /**
-   * Функция сама добавляет задачу в очередь задач.
-   * @param J прерывающая задача
+   * Will add job to the job queue.
+   * @param J interrupting job
    */
   private async _handleJobInterruption(J: Job) {
     const current = this.currentJob();
     this.jobs.unshift(J);
-    let unpauseFn: SomeFunction | undefined, rejectPauseFn: SomeFunction | undefined;
-    const promisePause = new Promise<void>((res, rej) => { unpauseFn = res; rejectPauseFn = rej });
+    let unpauseFn: SomeFunction | undefined;
+    const promisePause = new Promise<void>((res) => { unpauseFn = res; });
+
+    this._jobExecutionStatus = false;
     if (current !== undefined) {
       current.promisePause = promisePause;
       await current.finalize?.().catch(() => {});
     }
-    const execution = this._jobExecutionProcess;
-    this._jobExecutionProcess = undefined;
-    this._jobInterruptionProcess = undefined;
-    this._startJobExecution();
-    this._jobExecutionProcess = execution;
+    await this._invokeJob(J).catch(() => this._handleJobInterruption(J));
+    if (J.promisePause) await J.promisePause;
     unpauseFn?.();
-    if (current !== undefined) current.promisePause = undefined;
   }
 }
 
