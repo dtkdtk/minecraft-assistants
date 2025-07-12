@@ -65,6 +65,8 @@ export interface JobUnit {
    * When creating a job, this field should be omitted (ignored).
    */
   promisePause?: Promise<void> | undefined;
+  /** System setting that auto-re-adds job to the queue after execution failure. */
+  reExecuteAfterFail?: boolean;
   /** More = better. */
   priority: JobPriority;
   /** Do we still need to execute the job? */

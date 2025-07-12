@@ -38,10 +38,12 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier))
       return;
     else if (this.jobs.length > 0 && J.priority > (this.currentJob()?.priority ?? 0)) {
-      const interrupt = () => this._handleJobInterruption(J).then(() => {
-        this.jobs.shift();
-        this._startJobExecution();
-      });
+      const interrupt = () => this._jobInterruptionProcess = this._handleJobInterruption(J)
+        .then(() => {
+          this._jobInterruptionProcess = undefined;
+          this.jobs.shift();
+          this._startJobExecution();
+        });
       if (this._jobInterruptionProcess) this._jobInterruptionProcess.then(interrupt);
       else interrupt();
     }
@@ -98,33 +100,43 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
       }
       else JU = currentJob;
         
-      await this._invokeJob(JU).catch(error => this._handleJobInvocationError(error));
-      this.jobs.shift();
+      const invocationResult = await this._invokeJob(JU)
+        .catch(error => this._handleJobInvocationError(error));
+      if (!stopped) {
+        if (invocationResult === true || (invocationResult === false && !JU.reExecuteAfterFail))
+          this.jobs.shift();
+        else if (invocationResult === null)
+          this.jobs.shift(); //TODO: Do not remove the job from the queue if it (job) was interrupted
+      }
     }
     if (!stopped) {
       this._jobExecutionStatus = false;
       if (this._onJobExecutionComplete) setImmediate(() => this._onJobExecutionComplete!());
     }
   }
-  private async _invokeJob(J: JobUnit): Promise<void> {
-    if (J.promisePause !== undefined) return;
+  /**
+   * @returns `true` if successfully executed, `false` if failed, `null` if interrupted
+   */
+  private async _invokeJob(J: JobUnit): Promise<boolean | null> {
+    if (J.promisePause !== undefined) return null;
     if (J.validate) {
       const isActual = await J.validate();
-      if (!isActual) return;
+      if (!isActual) return false;
     }
     let result: boolean = true;
     
-    if (J.promisePause !== undefined) return;
+    if (J.promisePause !== undefined) return null;
     if (J.prepare) result = await J.prepare()
-    if (!result) return await J.failure?.();
+    if (!result) return (await J.failure?.(), false);
     
-    if (J.promisePause !== undefined) return;
+    if (J.promisePause !== undefined) return null;
     result = await J.execute();
-    if (!result) return await J.failure?.();
+    if (!result) return (await J.failure?.(), false);
     
-    if (J.promisePause !== undefined) return;
+    if (J.promisePause !== undefined) return null;
     if (J.finalize) result = await J.finalize();
-    if (!result) return await J.failure?.();
+    if (!result) return (await J.failure?.(), false);
+    return true;
   }
   private _handleJobInvocationError(error: any) {
     if (error instanceof BrainIgnoredError) return;
