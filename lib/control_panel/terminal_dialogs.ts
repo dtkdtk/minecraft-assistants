@@ -1,8 +1,8 @@
 import { Console } from "console";
-import { Transform } from "stream";
-import { framedTable } from "./terminal_ui.js";
 import { Key } from "readline";
+import { Transform } from "stream";
 import { rl } from "./terminal_app.js";
+import { framedTable } from "./terminal_ui.js";
 
 /* Dialogs intercept the console by modifying the global `console` object.
   Dialogs can open other dialogs inside them; they will be placed in a special stack. */

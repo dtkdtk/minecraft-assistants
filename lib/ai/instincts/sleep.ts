@@ -1,14 +1,14 @@
-import _mfPathfinder from "mineflayer-pathfinder";
-import { JobPriority, LocationPoint, LocationType } from "../../types.js";
-import type Brain from "../brain.js";
 import assert from "assert";
+import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
+import { DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../../index.js";
+import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Sleep";
 
-const NIGHT_CHECK_INTERVAL = +Durat.sec(10);
-const DAY_CHECK_INTERVAL = +Durat.sec(1);
+const NIGHT_CHECK_INTERVAL = Durat({ sec: 10 });
+const DAY_CHECK_INTERVAL = Durat({ sec: 1 });
 const NIGHT_TIME = 12542; /* Magic constant (minecraft ticks) */
 const kLocationBed = "bed";
 const kJobSleep = Symbol("job:sleep");

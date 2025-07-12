@@ -1,9 +1,8 @@
-import { JobPriority, LocationPoint, LocationType } from "../../types.js";
-import type Brain from "../brain.js";
-import { Item } from "prismarine-item";
 import _mfPathfinder from "mineflayer-pathfinder";
+import { Item } from "prismarine-item";
 import { Vec3 } from "vec3";
-import assert from "assert"; // Don't delete !
+import { debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../../index.js";
+import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Farm"
@@ -109,7 +108,7 @@ export default class Mod_Farm {
     // Opening the chest
     await this.B.bot.lookAt(chestBlock.position.offset(0.5, 0.5, 0.5));
     debugLog("I looked at the chest.")
-    await new Promise(resolve => setTimeout(resolve, +Durat.sec(0.5)))
+    await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.5 })))
     const chest = await this.B.bot.openChest(chestBlock)
     const itemsInChest = chest.containerItems();
 
@@ -182,7 +181,7 @@ export default class Mod_Farm {
     if (this.B.bot.pathfinder.isMoving()) {
       this.B.bot.pathfinder.stop();
       debugLog("I stopped any others moves.");
-      await new Promise(resolve => setTimeout(resolve, +Durat.sec(0.5)));
+      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.5 })));
     }
 
     const movements = new Movements(this.B.bot);
@@ -199,11 +198,10 @@ export default class Mod_Farm {
     } catch (err) {
       this.B.warn(`[${MODULE_NAME}] Movements error.`);
       return false;
-    } finally {
-      this.B.bot.pathfinder.setGoal(null);
-      debugLog("Bot reached the chest.");
-      return true;
     }
+    this.B.bot.pathfinder.setGoal(null);
+    debugLog("Bot reached the chest.");
+    return true;
   }
 
   async getChestLocation(): Promise<LocationPoint | null> {

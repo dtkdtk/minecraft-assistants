@@ -1,11 +1,11 @@
 import mcdata from "minecraft-data";
 import { type Item } from "prismarine-item";
-import { JobPriority, type JobUnit } from "../../types.js";
+import { Durat, JobPriority, type JobUnit } from "../../index.js";
 import type Brain from "../brain.js";
 
 const MODULE_NAME = "Mod_Eat";
 
-const CHECK_INTERVAL = +Durat.sec(3);
+const CHECK_INTERVAL = Durat({ sec: 3 });
 const REGENERATION_MIN_HEALTH = 16;
 const REGENERATION_MIN_FOOD = 19;
 const MIN_SATURATION = 14;
@@ -33,7 +33,7 @@ export default class Mod_Eat {
     const food = this.findFood();
     if (!food) {
       //TODO: go look for food
-      if (this._lastHungryMessage + +Durat.min(3) < Date.now()) {
+      if (this._lastHungryMessage + Durat({ min: 3 }) < Date.now()) {
         this._lastHungryMessage = Date.now();
         this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.food}`);
       }

@@ -1,5 +1,5 @@
 import { Bot } from "mineflayer";
-import type { Job, JobUnit } from "../types.js";
+import { type AnyFunction, DB, debugLog, isAggregateJob, type Job, type JobUnit, type SomeFunction, TypedEventEmitter } from "../index.js";
 import Mod_ChatCommands from "./instincts/chat_commands.js";
 import Mod_Eat from "./instincts/eat.js";
 import Mod_Sleep from "./instincts/sleep.js";

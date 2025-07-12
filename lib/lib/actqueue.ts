@@ -1,3 +1,5 @@
+import { type SomeFunction } from "../auxiliary.js";
+
 /**
  * Action queue. Performs specified actions evenly, at equal time intervals.
  */

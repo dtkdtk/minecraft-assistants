@@ -1,9 +1,9 @@
 import type { Key } from "readline";
+import { styleText } from "util";
 import type Brain from "../ai/brain.js";
-import type { Job } from "../types.js";
+import { isAggregateJob, type Job } from "../index.js";
 import { DialogWindow, DialogWindowCanvas } from "./terminal_dialogs.js";
 import { alignCenter, alignLeft, progressBar } from "./terminal_ui.js";
-import { styleText } from "util";
 
 export class StatusMonitor extends DialogWindow {
   brain: Brain;

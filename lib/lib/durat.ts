@@ -1,49 +1,9 @@
-declare global {
-  /**
-   * Converts "human" time to "machine" time - hours, minutes, seconds to milliseconds.
-   * Created to avoid confusion with multiplications.
-   *
-   * Used as a namespace; a new object is created each time.
-   * To convert to milliseconds, use unary plus: `+Durat.sec(30)`
-   */
-  export const Durat: DurationBuilder;
+export function Durat(time: { ms?: number; sec?: number; min?: number; hr?: number; day?: number }): number {
+  let R = 0;
+  if (time.day) R += time.day * 1000 * 60 * 60 * 24;
+  if (time.hr) R += time.hr * 1000 * 60 * 60;
+  if (time.min) R += time.min * 1000 * 60;
+  if (time.sec) R += time.sec * 1000;
+  if (time.ms) R += time.ms;
+  return R;
 }
-
-/** @internal */
-class DurationBuilder {
-  holds = 0;
-  [Symbol.toPrimitive]() {
-    return this.holds;
-  }
- 
-  ms(count: number) {
-    this.holds += count;
-    return this;
-  }
- 
-  sec(count: number) {
-    this.holds += count * 1000;
-    return this;
-  }
- 
-  min(count: number) {
-    this.holds += count * 1000 * 60;
-    return this;
-  }
- 
-  hr(count: number) {
-    this.holds += count * 1000 * 60 * 60;
-    return this;
-  }
- 
-  day(count: number) {
-    this.holds += count * 1000 * 60 * 60 * 24;
-    return this;
-  }
-}
-
-Object.defineProperty(global, "Durat", {
-  get: function() {
-    return new DurationBuilder();
-  }
-});
