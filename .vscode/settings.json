@@ -20,7 +20,8 @@
     "RCON",
     "readline",
     "seald",
-    "unequip"
+    "unequip",
+    "Valinok"
   ],
   "typescript.tsdk": "node_modules\\typescript\\lib"
 }
