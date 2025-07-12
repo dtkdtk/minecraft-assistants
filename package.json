@@ -4,6 +4,7 @@
   "description": "Minecraft bots that can do some of your routine work for you.",
   "type": "module",
   "scripts": {
+    "lint": "npx eslint --cache",
     "dev": "rm -r ./dist; npx tsc --watch",
     "test": "cd ./test; node ./test_bot.js"
   },
@@ -25,9 +26,13 @@
   },
   "homepage": "https://github.com/dtkdtk/minecraft-assistants#readme",
   "devDependencies": {
+    "@eslint/js": "^9.31.0",
     "@types/ini": "^4.1.1",
     "@types/node": "^24.0.3",
-    "typescript": "^5.8.3"
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.36.0"
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
