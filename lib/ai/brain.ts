@@ -1,8 +1,7 @@
 import { Bot } from "mineflayer";
 import { type AnyFunction, DB, debugLog, isAggregateJob, type Job, type JobUnit, type SomeFunction, TypedEventEmitter } from "../index.js";
-import Mod_ChatCommands from "./instincts/chat_commands.js";
-import Mod_Eat from "./instincts/eat.js";
-import Mod_Sleep from "./instincts/sleep.js";
+import Mod_Eat from "./skills/eat.js";
+import Mod_Sleep from "./skills/sleep.js";
 import Mod_Farm from "./skills/farm.js";
 
 export default class Brain extends TypedEventEmitter<BrainEventsMap> {
@@ -11,7 +10,6 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     /* Modules must be initialized in the constructor,
       because when creating a field of the Brain class, 'bot' equals 'undefined'
       (initialization of fields is called before the constructor). */
-    this.i_ChatCommands = new Mod_ChatCommands(this);
     this.i_Eat = new Mod_Eat(this);
     this.i_Sleep = new Mod_Sleep(this);
     this.i_Farm = new Mod_Farm(this);
@@ -19,7 +17,6 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     process.once("exit", wrongExitCallback);
   }
 
-  i_ChatCommands;
   i_Eat;
   i_Sleep;
   i_Farm;
