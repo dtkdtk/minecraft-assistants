@@ -1,6 +1,6 @@
 import * as mf from "mineflayer";
 
-export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "host" | "username" | "port">;
+export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "username" | "host" | "port">;
 /**
  * Main parameters.
  * Set when the bot starts.
