@@ -21,6 +21,7 @@
     "RCON",
     "readline",
     "seald",
+    "subthread",
     "unequip",
     "Valinok"
   ],

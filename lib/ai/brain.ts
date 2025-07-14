@@ -54,7 +54,7 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   }
 
   async exitProcess(): Promise<never> {
-    console.log("Saving databases before exit...");
+    console.log("\nSaving databases before exit...");
     for (const [dbName, database] of Object.entries(DB)) {
       database.stopAutocompaction();
       await database.compactDatafileAsync();
