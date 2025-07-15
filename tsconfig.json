@@ -1,7 +1,9 @@
 {
+  "extends": "./base_tsconfig_options.json",
   "include": [
     "./lib/**/*.ts",
     "./lib/**/*.js",
+    "./skills/**/*.ts",
   ],
   "exclude": [
     "./node_modules/**/*",
@@ -9,19 +11,6 @@
     "__PRIVATE__/**/*"
   ],
   "compilerOptions": {
-    "noEmit": false,
-    "allowJs": true,
-    "checkJs": true,
-    "skipLibCheck": true,
-
-    "strict": true,
-    "resolveJsonModule": true,
-    "rootDir": "./lib/",
     "outDir": "./dist/",
-
-    "removeComments": true,
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
-    "lib": ["ESNext"],
   }
 }

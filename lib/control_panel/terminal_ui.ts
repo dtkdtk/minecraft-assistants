@@ -1,4 +1,4 @@
-import type Brain from "../ai/brain.js";
+import type Brain from "../brain.js";
 
 export function sendBasicPrompt() {
   process.stdout.write("> ");
@@ -6,7 +6,7 @@ export function sendBasicPrompt() {
 export function sendWelcomeMessage(brain: Brain) {
   console.log(`Welcome to '${brain.bot.player.displayName}' assistant control panel`);
   console.log(`Type 'help' to get full command list & info`);
-  console.log(`Type 'stat' or 'mon' to open live status monitor`);
+  console.log(`Type 'mon' to open live status monitor`);
   console.log(`Type 'quit' or 'exit' to stop the bot and close this window`);
 }
 
