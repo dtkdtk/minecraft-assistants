@@ -1,6 +1,7 @@
 import type * as mf from "mineflayer";
 
 export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "username" | "host" | "port">;
+
 /**
  * Main parameters.
  * Set when the bot starts.
@@ -34,6 +35,9 @@ export interface GeneralBotOptions extends _NecessaryBotOptions {
    */
   interactiveCli?: boolean;
 }
+type _CleanBotOptions = Omit<GeneralBotOptions, keyof _NecessaryBotOptions | "_mfClientOptionsOverrides">;
+export type OptionalBotOptions = { [key in keyof _CleanBotOptions]: NonNullable<_CleanBotOptions[key]> };
+export type CompletedGeneralBotOptions = GeneralBotOptions & Required<OptionalBotOptions>;
 
 export type Bot = mf.Bot;
 export type BotEvents = mf.BotEvents;

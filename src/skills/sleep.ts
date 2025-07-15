@@ -1,8 +1,8 @@
 import assert from "assert";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
-import { DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
 import type Brain from "../lib/brain.js";
+import { type BotSkill, DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Sleep";
@@ -15,15 +15,13 @@ const kJobSleep = Symbol("job:sleep");
 
 /* TODO: Approximation of travel time; advance movement */
 
-export default class Mod_Sleep {
+export default class Mod_Sleep implements BotSkill {
+  readonly moduleName: string = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined
   
-  constructor(private readonly B: Brain) {
-    if (B.bot.entity) this.whenBotSpawn();
-    else B.bot.once("spawn", this.whenBotSpawn.bind(this));
-  }
+  constructor(private readonly B: Brain) {}
   
-  async whenBotSpawn() {
+  async onGame() {
     await this.loadDatabaseDefaults();
     this.timer = setInterval(() => this.update(), NIGHT_CHECK_INTERVAL);
   }

@@ -8,6 +8,6 @@ export default {
   host: "localhost",
   auth: "offline",
   port: 25565,
-  enableDebug: false,
+  enableDebug: true,
   interactiveCli: true,
 };
