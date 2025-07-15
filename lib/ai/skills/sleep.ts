@@ -1,8 +1,8 @@
 import assert from "assert";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
-import { DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
-import type Brain from "../lib/brain.js";
+import { DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../../index.js";
+import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Sleep";

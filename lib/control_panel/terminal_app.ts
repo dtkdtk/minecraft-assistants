@@ -1,6 +1,6 @@
 import libReadline from "readline";
-import type Brain from "../brain.js";
-import { StatusMonitor } from "./pages/status_monitor.js";
+import type Brain from "../ai/brain.js";
+import { StatusMonitor } from "./status_monitor.js";
 import { sendBasicPrompt, sendWelcomeMessage } from "./terminal_ui.js";
 import { DialogWindow } from "./terminal_dialogs.js";
 
@@ -31,11 +31,12 @@ export function setupCommandLineInterface(brain: Brain): Promise<never> {
         case "help": {
           console.log(`COMMAND LIST:`);
           console.log(` help :: Display command list & info`);
-          console.log(` mon :: Open live status monitor`);
+          console.log(` stat :: (alias: mon) Open live status monitor`);
           console.log(` quit :: (alias: exit) Stop the bot and close this window`);
           return sendBasicPrompt();
         }
-        case "mon": {
+        case "mon":
+        case "stat": {
           const statusMonitor = new StatusMonitor(brain);
           statusMonitor.openDialogWindow();
           await statusMonitor.dialogPromise; //transfer control over code execution

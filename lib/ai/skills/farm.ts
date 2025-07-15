@@ -1,8 +1,8 @@
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Item } from "prismarine-item";
 import { Vec3 } from "vec3";
-import { debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
-import type Brain from "../lib/brain.js";
+import { debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../../index.js";
+import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Farm"

@@ -1,4 +1,4 @@
-import type * as mf from "mineflayer";
+import * as mf from "mineflayer";
 
 export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "username" | "host" | "port">;
 /**
@@ -7,22 +7,11 @@ export type _NecessaryBotOptions = Pick<mf.BotOptions, "auth" | "username" | "ho
  */
 export interface GeneralBotOptions extends _NecessaryBotOptions {
   _mfClientOptionsOverrides?: Partial<mf.BotOptions>;
-
   /**
    * Interval for writing databases to files.
    * @default 3min
    */
   databaseAutosaveInterval?: number;
-  /**
-   * `data/` directory path.
-   * @default "./data"
-   */
-  databaseDirPath?: string;
-  /**
-   * `skills/` directory path.
-   * @default "./skills"
-   */
-  skillsDirPath?: string;
   /**
    * Enable debug? (for developers)
    * @default false
@@ -190,14 +179,4 @@ export namespace DatabaseTypes {
     _id: KnownModuleNames; /* module name */
     locations: Location[];
   };
-}
-
-
-
-/** All bot skill classes must implement this interface. */
-export interface BotSkill {
-  readonly moduleName: string;
-
-  /** Will be executed when the bot enters the game. */
-  onGame? (): Promise<void> | void;
 }

@@ -1,9 +1,10 @@
-import type * as Nedb from "@seald-io/nedb";
+import { default as Nedb } from "@seald-io/nedb";
 import "./lib/actqueue.js";
 import "./lib/durat.js";
 import "./lib/typed_emitter.js";
 import type { AggregateJob, DatabaseTypes, Job } from "./types.js";
 type Datastore<Schema = Record<string, any>> = Nedb.default<Schema>;
+const DatastoreConstructor = Nedb as unknown as typeof Nedb.default;
 
 export function debugLog(message: string): void {
   if (debugLog.enableDebug)
@@ -35,12 +36,13 @@ export function stringifyCoordinates(
   return "<incorrect-coordinates>";
 }
 
-export const DB: {
+export const DB: Readonly<{
   common: Datastore,
   locations: Datastore<DatabaseTypes.LocationsDatabase>,
-} = {
-  common: undefined!,
-  locations: undefined!,
+}> = {
+  /* The path is relative to the CWD (Current Working Directory) */
+  common: new DatastoreConstructor({ filename: "./data/common.db", autoload: true }),
+  locations: new DatastoreConstructor({ filename: "./data/locations.db", autoload: true }),
 };
 
 export type Assert<Got, Needed> = Got extends Needed ? Got : never;

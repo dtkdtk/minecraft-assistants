@@ -1,22 +1,27 @@
 import { Bot } from "mineflayer";
-import { type AnyFunction, type BotSkill, DB, debugLog, isAggregateJob, type Job, type JobUnit, type SomeFunction, TypedEventEmitter } from "./index.js";
-import { join as joinPath } from "path";
-import * as libFs from "fs";
-
-const SKILLS_DIR_PATH = joinPath(".", "skills");
+import { type AnyFunction, DB, debugLog, isAggregateJob, type Job, type JobUnit, type SomeFunction, TypedEventEmitter } from "../index.js";
+import Mod_Eat from "./skills/eat.js";
+import Mod_Sleep from "./skills/sleep.js";
+import Mod_Farm from "./skills/farm.js";
 
 export default class Brain extends TypedEventEmitter<BrainEventsMap> {
   constructor(public bot: Bot) {
     super();
+    /* Modules must be initialized in the constructor,
+      because when creating a field of the Brain class, 'bot' equals 'undefined'
+      (initialization of fields is called before the constructor). */
+    this.i_Eat = new Mod_Eat(this);
+    this.i_Sleep = new Mod_Sleep(this);
+    this.i_Farm = new Mod_Farm(this);
     process.once("SIGINT", async () => await this.exitProcess());
     process.once("exit", wrongExitCallback);
-    this.loadSkills();
   }
 
+  i_Eat;
+  i_Sleep;
+  i_Farm;
   warningsQueue: string[] = [];
   jobs: Job[] = [];
-  skills: Map<string, BotSkill> = new Map();
-  skillsDir?: libFs.Dir;
 
   currentJob(): Job | undefined {
     return this.jobs[0];
@@ -47,7 +52,6 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
 
   async exitProcess(): Promise<never> {
     console.log("\nSaving databases before exit...");
-    if (this.skillsDir) await this.skillsDir.close().catch(() => {});
     for (const [dbName, database] of Object.entries(DB)) {
       database.stopAutocompaction();
       await database.compactDatafileAsync();
@@ -61,17 +65,6 @@ export default class Brain extends TypedEventEmitter<BrainEventsMap> {
     this.warningsQueue.push(message);
     this.emit("newWarning", message);
     console.warn(message);
-  }
-  async loadSkills() {
-    if (this.skills.size > 0) this.skills.clear();
-    if (this.skillsDir) await this.skillsDir.close();
-    this.skillsDir = libFs.opendirSync(SKILLS_DIR_PATH);
-    for await (const skillEnt of this.skillsDir) {
-      if (!skillEnt.isFile() || !skillEnt.name.endsWith(".js")) continue;
-      const skill = await import(joinPath(skillEnt.parentPath, skillEnt.name))
-        .catch();
-
-    }
   }
 
 
