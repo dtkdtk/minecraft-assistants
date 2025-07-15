@@ -14,7 +14,7 @@ const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_po
 const kJobEat = Symbol("job:eat");
 
 export default class Mod_Eat implements BotSkill {
-  readonly moduleName: string = MODULE_NAME;
+  readonly moduleName = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined;
   private _lastHungryMessage: number = 0;
 

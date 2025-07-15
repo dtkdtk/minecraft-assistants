@@ -1,30 +1,18 @@
-import * as libFs from "fs";
 import { Bot } from "mineflayer";
+import { type AnyFunction, type BotSkill, DB, debugLog, isAggregateJob, type Job, type JobUnit, type SomeFunction, TypedEventEmitter } from "./index.js";
 import { join as joinPath } from "path";
-import {
-  type AnyFunction,
-  type BotSkill,
-  type CompletedGeneralBotOptions,
-  DB,
-  debugLog,
-  isAggregateJob,
-  type Job,
-  type JobUnit,
-  type SomeFunction,
-  TypedEventEmitter
-} from "./index.js";
-import { pathToFileURL } from "url";
+import * as libFs from "fs";
 
-export class Brain extends TypedEventEmitter<BrainEventsMap> {
-  constructor(public bot: Bot, public configuration: CompletedGeneralBotOptions) {
+const SKILLS_DIR_PATH = joinPath(".", "skills");
+
+export default class Brain extends TypedEventEmitter<BrainEventsMap> {
+  constructor(public bot: Bot) {
     super();
-    bot.once("spawn", () => { this.isBotSpawned = true });
     process.once("SIGINT", async () => await this.exitProcess());
     process.once("exit", wrongExitCallback);
     this.loadSkills();
   }
 
-  isBotSpawned = false;
   warningsQueue: string[] = [];
   jobs: Job[] = [];
   skills: Map<string, BotSkill> = new Map();
@@ -77,32 +65,12 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
   async loadSkills() {
     if (this.skills.size > 0) this.skills.clear();
     if (this.skillsDir) await this.skillsDir.close();
-    const dirPath = joinPath(process.cwd(), this.configuration.skillsDirPath!);
-    this.skillsDir = libFs.opendirSync(dirPath);
+    this.skillsDir = libFs.opendirSync(SKILLS_DIR_PATH);
     for await (const skillEnt of this.skillsDir) {
       if (!skillEnt.isFile() || !skillEnt.name.endsWith(".js")) continue;
-      debugLog(`Loading skill: '${skillEnt.name}'`);
+      const skill = await import(joinPath(skillEnt.parentPath, skillEnt.name))
+        .catch();
 
-      const skillPath = pathToFileURL(joinPath(skillEnt.parentPath, skillEnt.name));
-      const skill = await import(skillPath.toString())
-        .catch(E => (this.warn("Cannot load bot skill (reading phase): " + skillEnt.name + "\nError: " + (E?.message ?? "?")), null));
-      if (!skill) continue;
-
-      if (!skill.default) {
-        this.warn(`Invalid skill file: '${skillEnt.name}', error: 'No default export'`);
-        continue;
-      }
-      const SkillClass = skill.default as new (brain: Brain) => BotSkill;
-
-      try {
-        const skillInstance = new SkillClass(this);
-        if (this.isBotSpawned) skillInstance.onGame?.();
-        else this.bot.once("spawn", () => skillInstance.onGame?.());
-        this.skills.set(skillInstance.moduleName, skillInstance);
-      }
-      catch (error: any) {
-        this.warn("Cannot load bot skill (instance phase): " + skillEnt.name + "\nError: " + (error?.message ?? "?"));
-      }
     }
   }
 
@@ -216,5 +184,3 @@ function wrongExitCallback() {
 interface BrainEventsMap {
   newWarning(message: string): any;
 }
-
-export default Brain;

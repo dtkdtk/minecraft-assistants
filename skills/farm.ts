@@ -1,8 +1,8 @@
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Item } from "prismarine-item";
 import { Vec3 } from "vec3";
+import { debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
 import type Brain from "../lib/brain.js";
-import { type BotSkill, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../lib/index.js";
 const { Movements, goals } = _mfPathfinder;
 
 const MODULE_NAME = "Mod_Farm"
@@ -23,9 +23,8 @@ const chestPoint: LocationPoint = {
   z: 280,   // 260, 65, 280
 }
 
-export default class Mod_Farm implements BotSkill {
-  readonly moduleName: string = MODULE_NAME;
-
+export default class Mod_Farm {
+  
   constructor(private readonly B: Brain) {
     this.B.addJob({
       jobIdentifier: Symbol(),

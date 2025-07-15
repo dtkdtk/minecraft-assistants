@@ -1,7 +1,9 @@
 {
   "extends": "./base_tsconfig_options.json",
   "include": [
-    "./src/**/*.ts",
+    "./lib/**/*.ts",
+    "./lib/**/*.js",
+    "./skills/**/*.ts",
   ],
   "exclude": [
     "./node_modules/**/*",
@@ -10,6 +12,5 @@
   ],
   "compilerOptions": {
     "outDir": "./dist/",
-    "rootDir": "./src/"
   }
 }

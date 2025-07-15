@@ -7,7 +7,7 @@ type Datastore<Schema = Record<string, any>> = Nedb.default<Schema>;
 
 export function debugLog(message: string): void {
   if (debugLog.enableDebug)
-    console.debug("[DEBUG]", message);
+    console.debug(message);
 }
 debugLog.enableDebug = false;
 
