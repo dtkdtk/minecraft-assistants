@@ -1,7 +1,6 @@
 /* Production code; no minimization / compilation 
   This is the entry point for minecraft-assistants application */
 
-import { createMinecraftAssistantBot } from "../dist/init_bot.js";
 import libIni from "ini";
 import libFs from "fs";
 import libReadline from "readline/promises";
@@ -103,7 +102,7 @@ const CONFIGURATION_ADAPTION_MAP = {
       }
       else return V;
     },
-    enableDebug: (cfg, botKey) => {
+    enableDebug: (cfg) => {
       let V = cfg.General.enable_debug;
       return V;
     },
@@ -142,7 +141,7 @@ async function __MAIN__() {
       joinPath(".", "subthread.js"),
       { stdio: "inherit", env: { BOT_CONFIGURATION: JSON.stringify(adapted) } },
     );
-    thread.once("exit", (exitCode) => { process.exit(0) });
+    thread.once("exit", () => { process.exit(0) });
   }
   else {
     /* Multi-bot mode.

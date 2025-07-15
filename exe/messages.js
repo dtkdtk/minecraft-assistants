@@ -74,7 +74,7 @@ export const en = {
       createConfigFile: (fileName) => `(File System) Cannot create '${fileName}' file in the current directory.`,
       readConfigFile: (fileName) => `(File System) Cannot read '${fileName}' file in the current directory.`,
     },
-    recreatingConfigFile: "\u26A0\uFE0F  'configuration.conf' file contains INI-syntax errors,\n"
+    recreatingConfigFile: "✖ 'configuration.conf' file contains INI-syntax errors,\n"
       + "or the 'project_version' property is missing.\n"
       + "Delete the configuration file and recreate it with default settings?",
     abortRecreatingConfigFile: "You aborted recreation of the 'configuration.conf' file.\n"

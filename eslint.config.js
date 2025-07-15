@@ -5,13 +5,13 @@ import { defineConfig } from "eslint/config";
 import { includeIgnoreFile } from "@eslint/compat";
 import { fileURLToPath } from "node:url";
 
-const filePattern = "{lib,exe}/**/*.{js,mjs,cjs,ts,mts,cts}";
+const filePatterns = ["lib/**/*.{js,mjs,cjs,ts,mts,cts}", "exe/**/.{js,mjs,cjs,ts,mts,cts}"];
 
 export default defineConfig([
   includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
   tsEslint.configs.recommended,
   {
-    files: [filePattern],
+    files: filePatterns,
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: {
@@ -25,13 +25,13 @@ export default defineConfig([
     }
   },
   {
-    files: [filePattern],
+    files: filePatterns,
     languageOptions: {
       globals: globals.es2020
     }
   },
   {
-    files: [filePattern],
+    files: filePatterns,
     languageOptions: {
       globals: {
         'NodeJS': false,
