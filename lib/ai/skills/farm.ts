@@ -1,7 +1,7 @@
 import { Item } from "prismarine-item";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
-import assert from "assert"; // Don't delete ! 
+// import assert from "assert"; // Don't delete ! 
 import { debugLog, Durat, JobPriority, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
 import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
@@ -9,9 +9,7 @@ const { Movements, goals } = _mfPathfinder;
 const MODULE_NAME = "Mod_Farm"
 
 const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
-const HOES_IDS = [290, 291, 292, 293, 294, 494];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
-const SEEDS_IDS = [295, 457, 391, 392];
 const kLocationChest = "chest" ;
 const kJobFarming = Symbol("job:farm");
 
@@ -19,28 +17,28 @@ const chestPoint: LocationPoint = {
   key: "chestPoint",
   type: LocationType.Point,
   
-  x: 260,   // 280, 64, 300
-  y: 65,
-  z: 280,   // 260, 65, 280
+  x: 280,   // 280, 64, 300
+  y: 64,
+  z: 300,   // 260, 65, 280
 }
 
 const fieldLocation: LocationRegion = {
   key: "fieldLocation",
   type: LocationType.Region,
 
-  x1: 1,
-  y1: 65,
-  z1: 1,
+  x1: 276,
+  y1: 64,
+  z1: 306,
 
-  x2: 2,
-  y2: 65,
-  z2: 2,
+  x2: 284,
+  y2: 64,
+  z2: 314,
 }
 
 export default class Mod_Farm {
   
   constructor(private readonly B: Brain) {
-    //this.update();
+    this.update();
   }
 
   // cd test; node test_bot.js    // it's for me
@@ -71,14 +69,15 @@ export default class Mod_Farm {
    */
 
   async getReadyToPlant() {
+    debugLog(`${this.B.currentJob.arguments[0]}`);
     if (!this.hasNeededItems()) {
       debugLog("I hasn't needed items; trying to find it...");
       if (!await this.takeNeededItems()) return false;
     }
-    if (!this.isOnAField()) {
+    if (!await this.isOnAField()) {
       debugLog("I'm not on a field; trying to reach it...")
       const closestCorner = this.getNearestFieldCorner();
-      if (!closestCorner) return false; if (closestCorner == true) return true;
+      if (typeof closestCorner === 'boolean') return closestCorner;
       if (!await this.goToPoint(closestCorner, "field")) return false; 
     }
     debugLog("I am ready to plant.");
@@ -104,7 +103,11 @@ export default class Mod_Farm {
       this.B.warn(`[${MODULE_NAME}] Can't find field location.`);
       return false;
     }
-    if (this.getNearestFieldCorner() == true) return true;  
+    const atTheField = this.getNearestFieldCorner();
+    if (atTheField == true) {
+      debugLog(`I'm at the field.`);
+      return true;  
+    }
     return false;
   }
 
@@ -115,6 +118,7 @@ export default class Mod_Farm {
       return false;
     }
 
+    debugLog(`Getting field's corners...`)
     const botPos = this.B.bot.entity.position;
     const corners = [
       new Vec3(fieldLocation.x1, fieldLocation.y1, fieldLocation.z1),
@@ -131,7 +135,11 @@ export default class Mod_Farm {
         closestCorner = corner;
       }
     }
-    if (minDistance <= 0.5) return true;
+    debugLog(`${minDistance}, ${botPos}`);
+    if (minDistance <= 0.5) {
+      debugLog(`I'm already at the field`);
+      return true;
+    }
     const returnCorner: LocationPoint = {
       key: "targetFieldCorner",
       type: LocationType.Point,
@@ -142,7 +150,7 @@ export default class Mod_Farm {
     return returnCorner;
   }
 
-async takeNeededItems() {
+  async takeNeededItems() {
     // Taking chest's coordinates
     const chestPoint = await this.getChestLocation();
     if (chestPoint == null) {
@@ -227,7 +235,8 @@ async takeNeededItems() {
     return true;
   }
 
-  async goToPoint( botGoal: LocationPoint, pointDisplayName: string, range?: number ): Promise<boolean> {
+  async goToPoint( botGoal: LocationPoint, pointDisplayName?: string, range?: number ): Promise<boolean> {
+    if (!pointDisplayName) pointDisplayName = "point";
     // Didn't the bot already gone to the chest?
     const botPos = this.B.bot.entity.position;
     const distance = botPos.distanceTo(new Vec3(botGoal.x, botGoal.y, botGoal.z));
@@ -248,11 +257,11 @@ async takeNeededItems() {
     movements.canOpenDoors = true;
     this.B.bot.pathfinder.setMovements(movements);
 
-    if (range == undefined) range = 0;
+    if (!range) range = 0;
     const goal = new goals.GoalNear(botGoal.x, botGoal.y, botGoal.z, range);
     debugLog(`Going to ${pointDisplayName} at ${stringifyCoordinates(botGoal)}...`);
 
-// Trying to reach the chest
+// Trying to reach the point
     try {
       await this.B.bot.pathfinder.goto(goal);
       this.B.bot.pathfinder.setGoal(null);
@@ -303,6 +312,9 @@ async takeNeededItems() {
   // 2. Скорее всего змейкой пройтись по всем блокам и *обработать* их:
   //  а) если это земля, убрать траву (блок травы, не дёрн), вспахать и, если она запитана водой (вроде бы есть тег в майнкрафте у блока), засадить
   //  б) если культура выросла, то собрать и засадить обратно ту же культуру
+  // Алгоритм змейки:
+  // 1. Получить координаты каждого блока на поле (который пшеница, не земля) в виде массива. Отсортировать этот массив в виде змейки.
+  // 2. Пройтись по всем координатам, и из каждых координат сделать отдельную работу.
 
   /*
    *
