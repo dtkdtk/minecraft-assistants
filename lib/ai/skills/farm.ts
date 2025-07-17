@@ -69,7 +69,6 @@ export default class Mod_Farm {
    */
 
   async getReadyToPlant() {
-    debugLog(`${this.B.currentJob.arguments[0]}`);
     if (!this.hasNeededItems()) {
       debugLog("I hasn't needed items; trying to find it...");
       if (!await this.takeNeededItems()) return false;
@@ -135,7 +134,6 @@ export default class Mod_Farm {
         closestCorner = corner;
       }
     }
-    debugLog(`${minDistance}, ${botPos}`);
     if (minDistance <= 0.5) {
       debugLog(`I'm already at the field`);
       return true;
