@@ -2,7 +2,7 @@ import { Item } from "prismarine-item";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
 // import assert from "assert"; // Don't delete ! 
-import { debugLog, Durat, JobPriority, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
+import { debugLog, Durat, JobPriority, JobUnit, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
 import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
@@ -10,8 +10,12 @@ const MODULE_NAME = "Mod_Farm"
 
 const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
-const kLocationChest = "chest" ;
+const CROPS = ["wheat", "beetroots", "carrots", "potatoes"];
+const kLocationChest = "chest";
 const kJobFarming = Symbol("job:farm");
+
+type MatrixCell = Vec3 | null;    //  [ X, Y, Z ] | null
+type DynamicMatrix = MatrixCell[][];
 
 const chestPoint: LocationPoint = {
   key: "chestPoint",
@@ -36,25 +40,18 @@ const fieldLocation: LocationRegion = {
 }
 
 export default class Mod_Farm {
+
+  private _fieldMatrix: DynamicMatrix = [];
   
   constructor(private readonly B: Brain) {
-    this.update();
+    this.update();  
+    const n = this.createFieldMatrix;
   }
 
   // cd test; node test_bot.js    // it's for me
 
   update() {
-    this.B.addJob({
-      cursor: 0,
-      jobIdentifier: kJobFarming,
-      jobDisplayName: "Farming",
-      createdAt: Date.now(),
-      priority: JobPriority.Plain,
-      validate: async () => this.testV(),
-      prepare: async () => await this.getReadyToPlant(),
-      execute: async () => this.testE(),
-      finalize: async () => this.testF(),
-    });
+    this.B.addJob(new Job_Farming(this));
   }
 
   testV() {
@@ -73,11 +70,15 @@ export default class Mod_Farm {
       debugLog("I hasn't needed items; trying to find it...");
       if (!await this.takeNeededItems()) return false;
     }
-    if (!await this.isOnAField()) {
-      debugLog("I'm not on a field; trying to reach it...")
-      const closestCorner = this.getNearestFieldCorner();
-      if (typeof closestCorner === 'boolean') return closestCorner;
-      if (!await this.goToPoint(closestCorner, "field")) return false; 
+    // if (!await this.isOnAField()) {
+    //   debugLog("I'm not on a field; trying to reach it...")
+    //   const closestCorner = this.getNearestFieldCorner();
+    //   if (typeof closestCorner === 'boolean') return closestCorner;
+    //   if (!await this.goToPoint(closestCorner, "field")) return false; 
+    // }
+    if (!this.createFieldMatrix()) {
+      this.B.warn(`[${MODULE_NAME}] Can't create field matrix.`);
+      return false;
     }
     debugLog("I am ready to plant.");
     return true;
@@ -148,7 +149,7 @@ export default class Mod_Farm {
     return returnCorner;
   }
 
-  async takeNeededItems() {
+  async takeNeededItems(): Promise<boolean> {
     // Taking chest's coordinates
     const chestPoint = await this.getChestLocation();
     if (chestPoint == null) {
@@ -233,9 +234,9 @@ export default class Mod_Farm {
     return true;
   }
 
-  async goToPoint( botGoal: LocationPoint, pointDisplayName?: string, range?: number ): Promise<boolean> {
+  async goToPoint( botGoal: LocationPoint | Vec3, pointDisplayName?: string, range?: number ): Promise<boolean> {
     if (!pointDisplayName) pointDisplayName = "point";
-    // Didn't the bot already gone to the chest?
+    // Didn't the bot already gone to the point?
     const botPos = this.B.bot.entity.position;
     const distance = botPos.distanceTo(new Vec3(botGoal.x, botGoal.y, botGoal.z));
     if (range && distance <= range) {
@@ -304,6 +305,39 @@ export default class Mod_Farm {
     return fieldLocation;
   }
   
+  createFieldMatrix(): boolean {
+    // const fieldLocation = await this.getFieldLocation;
+    if (fieldLocation == null) { 
+      this.B.warn(`[${MODULE_NAME}] Can't find field location.`);
+      return false;
+    }
+
+    let xRows: number = Math.abs(fieldLocation.x1 - fieldLocation.x2) + 1;  
+    let zCols: number = Math.abs(fieldLocation.z1 - fieldLocation.z2) + 1;
+
+    if (fieldLocation.y1 !== fieldLocation.y2) {
+      this.B.warn(`[${MODULE_NAME}] Field is not flat. Matrix creation aborted.`);
+      return false;
+    }
+
+    const xStep: number = fieldLocation.x1 <= fieldLocation.x2 ? 1 : -1;
+    const zStep: number = fieldLocation.z1 <= fieldLocation.z2 ? 1 : -1;
+
+    this._fieldMatrix = [];
+
+    for (let i = 0; i < xRows; i++) {
+      const row: MatrixCell[] = [];
+      for (let j = 0; j < zCols; j++) {
+        const x = fieldLocation.x1 + i * xStep;
+        const z = fieldLocation.z1 + j * zStep;
+        row.push(new Vec3(x, fieldLocation.y1, z));
+      }
+      this._fieldMatrix.push(row);
+    }
+    console.log(this._fieldMatrix);
+    return true;
+  }
+
   // Пометки  для себя (удалю потом)
   // Как засадить грядки?
   // 1. Получить координаты места работ и прийти туда.
@@ -311,8 +345,8 @@ export default class Mod_Farm {
   //  а) если это земля, убрать траву (блок травы, не дёрн), вспахать и, если она запитана водой (вроде бы есть тег в майнкрафте у блока), засадить
   //  б) если культура выросла, то собрать и засадить обратно ту же культуру
   // Алгоритм змейки:
-  // 1. Получить координаты каждого блока на поле (который пшеница, не земля) в виде массива. Отсортировать этот массив в виде змейки.
-  // 2. Пройтись по всем координатам, и из каждых координат сделать отдельную работу.
+  // 1. Получить координаты каждого блока на поле (который пшеница, не земля) в виде массива. 
+  // 2. Пройтись по всем координатам змейкой, и из каждых координат сделать отдельную работу.
 
   /*
    *
@@ -320,14 +354,73 @@ export default class Mod_Farm {
    * 
    */
 
+  async processBlock(block: Vec3 | null) {
+    if (block == null) return true;
+    const Block = this.B.bot.blockAt(block);
+    if (!(Block == null || CROPS.includes(Block.name))) {
+      debugLog(`There is skipped block: ${stringifyCoordinates(block)}.`);
+      block = null;
+      return true;
+    }
+
+    if (!await this.goToPoint(block)) {
+      this.B.warn(`[${MODULE_NAME}] Cannot reach next point. `);
+      return false;
+    }
+
+    debugLog(`Block processed: ${stringifyCoordinates(block)}.`);
+    return true;
+  }
+
+  async execute() {
+    const xRows = this._fieldMatrix.length;
+    for (let i = 0; i < xRows; i++) {
+      const zCols = this._fieldMatrix[i].length;
+      for (let j = 0; j < zCols; j++) {
+        await this.processBlock(this._fieldMatrix[i][j]);
+      }
+    }
+  }
+  
   testE() {
     debugLog("EXECUTE TESTED SUCCESSFULLY");
     return true;
   }
+
+  /*
+  *
+  *  FINALIZE
+  * 
+  */
 
   testF() {
     debugLog("FINALIZE TESTED SUCCESSFULLY");
     return true;
   }
 
+}
+
+class Job_Farming implements JobUnit {
+  jobIdentifier: symbol | null;
+  jobDisplayName: string;
+  createdAt: number;
+  promisePause?: Promise<void> | undefined;
+  priority: JobPriority;
+  //jobs: JobUnit[];
+  validate? (): Promise<boolean>;
+  prepare? (): Promise<boolean>;
+  execute: () => Promise<boolean>;
+  finalize? (): Promise<boolean>;
+
+  constructor(M: Mod_Farm) {
+    this.jobIdentifier = kJobFarming,
+    this.jobDisplayName = "Farming",
+    this.createdAt = Date.now(),
+    this.priority = JobPriority.Plain,
+    //this.jobs = M.Jobs[],
+    this.validate = async () => M.testV(),
+    this.prepare = async () => await M.getReadyToPlant(),
+    this.execute = async () => M.testE(),
+    this.finalize = async () => M.testF()
+  }
 }
