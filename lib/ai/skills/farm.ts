@@ -2,7 +2,7 @@ import { Item } from "prismarine-item";
 import _mfPathfinder from "mineflayer-pathfinder";
 import { Vec3 } from "vec3";
 // import assert from "assert"; // Don't delete ! 
-import { debugLog, Durat, JobPriority, JobUnit, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
+import { AggregateJob, debugLog, Durat, JobPriority, JobUnit, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
 import type Brain from "../brain.js";
 const { Movements, goals } = _mfPathfinder;
 
@@ -11,6 +11,7 @@ const MODULE_NAME = "Mod_Farm"
 const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
 const CROPS = ["wheat", "beetroots", "carrots", "potatoes"];
+const AVAILABLE_BLOCKS = ["farmland", "dirt", "grass_block"];
 const kLocationChest = "chest";
 const kJobFarming = Symbol("job:farm");
 
@@ -44,8 +45,7 @@ export default class Mod_Farm {
   private _fieldMatrix: DynamicMatrix = [];
   
   constructor(private readonly B: Brain) {
-    this.update();  
-    const n = this.createFieldMatrix;
+    this.update();
   }
 
   // cd test; node test_bot.js    // it's for me
@@ -53,6 +53,45 @@ export default class Mod_Farm {
   update() {
     this.B.addJob(new Job_Farming(this));
   }
+
+  async goToPoint( botGoal: LocationPoint | Vec3, pointDisplayName?: string, range?: number ): Promise<boolean> {
+    if (!pointDisplayName) pointDisplayName = "point";
+    // Didn't the bot already gone to the point?
+    const botPos = this.B.bot.entity.position;
+    const distance = botPos.distanceTo(new Vec3(botGoal.x, botGoal.y, botGoal.z));
+    if (range && distance <= range) {
+        debugLog(`Bot near the ${pointDisplayName} now.`);
+        return true;
+    }
+
+    // Stopping any others moves
+    if (this.B.bot.pathfinder.isMoving()) {
+      this.B.bot.pathfinder.stop();
+      debugLog("I stopped any others moves.");
+      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.5 })));
+    }
+
+    const movements = new Movements(this.B.bot);
+    movements.canDig = false;
+    movements.canOpenDoors = true;
+    this.B.bot.pathfinder.setMovements(movements);
+
+    if (!range) range = 0;
+    const goal = new goals.GoalNear(botGoal.x, botGoal.y, botGoal.z, range);
+    debugLog(`Going to ${pointDisplayName} at ${stringifyCoordinates(botGoal)}...`);
+
+// Trying to reach the point
+    try {
+      await this.B.bot.pathfinder.goto(goal);
+      this.B.bot.pathfinder.setGoal(null);
+      debugLog(`Bot reached the ${pointDisplayName}`);
+      return true;
+    } catch (err) {
+      this.B.bot.pathfinder.setGoal(null);  
+      this.B.warn(`[${MODULE_NAME}] Movements error.`);
+      return false;
+    } 
+  }  
 
   testV() {
     debugLog("VALIDATE TESTED SUCCESSFULLY");
@@ -70,12 +109,6 @@ export default class Mod_Farm {
       debugLog("I hasn't needed items; trying to find it...");
       if (!await this.takeNeededItems()) return false;
     }
-    // if (!await this.isOnAField()) {
-    //   debugLog("I'm not on a field; trying to reach it...")
-    //   const closestCorner = this.getNearestFieldCorner();
-    //   if (typeof closestCorner === 'boolean') return closestCorner;
-    //   if (!await this.goToPoint(closestCorner, "field")) return false; 
-    // }
     if (!this.createFieldMatrix()) {
       this.B.warn(`[${MODULE_NAME}] Can't create field matrix.`);
       return false;
@@ -97,20 +130,7 @@ export default class Mod_Farm {
     return true;
   }
 
-  async isOnAField(): Promise<boolean> {
-    // const fieldLocation = await this.getFieldLocation;
-    if (fieldLocation == null) { 
-      this.B.warn(`[${MODULE_NAME}] Can't find field location.`);
-      return false;
-    }
-    const atTheField = this.getNearestFieldCorner();
-    if (atTheField == true) {
-      debugLog(`I'm at the field.`);
-      return true;  
-    }
-    return false;
-  }
-
+  // this will be used later
   getNearestFieldCorner() {
     // const fieldLocation = await this.getFieldLocation;
     if (fieldLocation == null) { 
@@ -234,45 +254,6 @@ export default class Mod_Farm {
     return true;
   }
 
-  async goToPoint( botGoal: LocationPoint | Vec3, pointDisplayName?: string, range?: number ): Promise<boolean> {
-    if (!pointDisplayName) pointDisplayName = "point";
-    // Didn't the bot already gone to the point?
-    const botPos = this.B.bot.entity.position;
-    const distance = botPos.distanceTo(new Vec3(botGoal.x, botGoal.y, botGoal.z));
-    if (range && distance <= range) {
-        debugLog(`Bot near the ${pointDisplayName} now.`);
-        return true;
-    }
-
-    // Stopping any others moves
-    if (this.B.bot.pathfinder.isMoving()) {
-      this.B.bot.pathfinder.stop();
-      debugLog("I stopped any others moves.");
-      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.5 })));
-    }
-
-    const movements = new Movements(this.B.bot);
-    movements.canDig = false;
-    movements.canOpenDoors = true;
-    this.B.bot.pathfinder.setMovements(movements);
-
-    if (!range) range = 0;
-    const goal = new goals.GoalNear(botGoal.x, botGoal.y, botGoal.z, range);
-    debugLog(`Going to ${pointDisplayName} at ${stringifyCoordinates(botGoal)}...`);
-
-// Trying to reach the point
-    try {
-      await this.B.bot.pathfinder.goto(goal);
-      this.B.bot.pathfinder.setGoal(null);
-      debugLog(`Bot reached the ${pointDisplayName}`);
-      return true;
-    } catch (err) {
-      this.B.bot.pathfinder.setGoal(null);  
-      this.B.warn(`[${MODULE_NAME}] Movements error.`);
-      return false;
-    } 
-  }
-
   async getChestLocation(): Promise<LocationPoint | null> {
     // const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
     // assert(locationsStore !== null);
@@ -354,36 +335,70 @@ export default class Mod_Farm {
    * 
    */
 
-  async processBlock(block: Vec3 | null) {
+  async processBlock(block: Vec3 | null): Promise<boolean> {
     if (block == null) return true;
     const Block = this.B.bot.blockAt(block);
-    if (!(Block == null || CROPS.includes(Block.name))) {
+    if (!(Block == null || Block.name == "air" || CROPS.includes(Block.name))) {
       debugLog(`There is skipped block: ${stringifyCoordinates(block)}.`);
       block = null;
       return true;
     }
 
+    const underBlock = this.B.bot.blockAt(new Vec3(block.x, block.y - 1, block.z));
+    if (!(underBlock == null || AVAILABLE_BLOCKS.includes(underBlock.name))) {
+      debugLog(`There is skipped underBlock: ${stringifyCoordinates(block)}.`);
+      block = null;
+      return true;
+    }
+
     if (!await this.goToPoint(block)) {
-      this.B.warn(`[${MODULE_NAME}] Cannot reach next point. `);
+      this.B.warn(`[${MODULE_NAME}] Cannot reach next point: ${stringifyCoordinates(block)}`);
       return false;
     }
+
+    if (!await this.farmABlock(block)) return false;
 
     debugLog(`Block processed: ${stringifyCoordinates(block)}.`);
     return true;
   }
 
-  async execute() {
+  async farmABlock(block: Vec3,) {
+    const Block = this.B.bot.blockAt(block);
+    const underBlock = this.B.bot.blockAt(new Vec3(block.x, block.y - 1, block.z));
+    if (underBlock == null) {      // underBlock cannot be a null, but VSC can't understand it :(
+      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT farmABlock(), CALL DEVELOPERS.`);
+      return false;
+    }
+    if (underBlock.name == AVAILABLE_BLOCKS[0]) {
+      debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} is FARMLAND.`)
+    } 
+    if (underBlock.name == AVAILABLE_BLOCKS[1] || underBlock.name == AVAILABLE_BLOCKS[2]) {
+      debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} isn't farmland.`)
+    }
+    debugLog(`${underBlock.name}`)
+    return true;
+  }
+
+  async executing(Jobs: JobUnit[]): Promise<boolean> {
+    debugLog(`executing started`)
     const xRows = this._fieldMatrix.length;
+    debugLog(`xRows created`)
     for (let i = 0; i < xRows; i++) {
+      debugLog(`'for' started`)
       const zCols = this._fieldMatrix[i].length;
       for (let j = 0; j < zCols; j++) {
-        await this.processBlock(this._fieldMatrix[i][j]);
+        // await this.processBlock(this._fieldMatrix[i][j]);
+        const job: JobUnit = {
+          jobIdentifier: Symbol(`farm_block_${i}_${j}`),
+          jobDisplayName: "Farming",
+          createdAt: Date.now(),
+          promisePause: undefined,
+          priority: JobPriority.Plain,
+          execute: async () => await this.processBlock(this._fieldMatrix[i][j]),
+        }
+        Jobs.push(job);
       }
     }
-  }
-  
-  testE() {
-    debugLog("EXECUTE TESTED SUCCESSFULLY");
     return true;
   }
 
@@ -398,29 +413,36 @@ export default class Mod_Farm {
     return true;
   }
 
+  testP() {
+    debugLog(`PAUSE TESTED SUCCESSFULLY`);
+    return;
+  }
+
 }
 
 class Job_Farming implements JobUnit {
+  cursor: number;
   jobIdentifier: symbol | null;
   jobDisplayName: string;
   createdAt: number;
-  promisePause?: Promise<void> | undefined;
+  promisePause?: Promise<void> | undefined = undefined;
   priority: JobPriority;
-  //jobs: JobUnit[];
+  jobs: JobUnit[];
   validate? (): Promise<boolean>;
   prepare? (): Promise<boolean>;
   execute: () => Promise<boolean>;
   finalize? (): Promise<boolean>;
 
   constructor(M: Mod_Farm) {
+    this.cursor = 0,
     this.jobIdentifier = kJobFarming,
     this.jobDisplayName = "Farming",
     this.createdAt = Date.now(),
     this.priority = JobPriority.Plain,
-    //this.jobs = M.Jobs[],
+    this.jobs = [],
     this.validate = async () => M.testV(),
     this.prepare = async () => await M.getReadyToPlant(),
-    this.execute = async () => M.testE(),
+    this.execute = async () => await M.executing(this.jobs),
     this.finalize = async () => M.testF()
   }
 }
