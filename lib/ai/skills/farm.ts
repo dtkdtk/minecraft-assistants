@@ -45,6 +45,7 @@ export default class Mod_Farm {
   private _fieldMatrix: DynamicMatrix = [];
   
   constructor(private readonly B: Brain) {
+    const n = this.createFieldMatrix;
     this.update();
   }
 
@@ -362,41 +363,30 @@ export default class Mod_Farm {
     return true;
   }
 
-  async farmABlock(block: Vec3,) {
+  async farmABlock(block: Vec3,): Promise<boolean> {
     const Block = this.B.bot.blockAt(block);
     const underBlock = this.B.bot.blockAt(new Vec3(block.x, block.y - 1, block.z));
     if (underBlock == null) {      // underBlock cannot be a null, but VSC can't understand it :(
       this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT farmABlock(), CALL DEVELOPERS.`);
       return false;
     }
-    if (underBlock.name == AVAILABLE_BLOCKS[0]) {
+    if (underBlock.name == AVAILABLE_BLOCKS[0]) {   // farmland
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} is FARMLAND.`)
+
     } 
-    if (underBlock.name == AVAILABLE_BLOCKS[1] || underBlock.name == AVAILABLE_BLOCKS[2]) {
+    if (underBlock.name == AVAILABLE_BLOCKS[1] || underBlock.name == AVAILABLE_BLOCKS[2]) {  // dirt || grass_block
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} isn't farmland.`)
     }
     debugLog(`${underBlock.name}`)
     return true;
   }
 
-  async executing(Jobs: JobUnit[]): Promise<boolean> {
-    debugLog(`executing started`)
+  async executing(): Promise<boolean> {
     const xRows = this._fieldMatrix.length;
-    debugLog(`xRows created`)
     for (let i = 0; i < xRows; i++) {
-      debugLog(`'for' started`)
       const zCols = this._fieldMatrix[i].length;
       for (let j = 0; j < zCols; j++) {
-        // await this.processBlock(this._fieldMatrix[i][j]);
-        const job: JobUnit = {
-          jobIdentifier: Symbol(`farm_block_${i}_${j}`),
-          jobDisplayName: "Farming",
-          createdAt: Date.now(),
-          promisePause: undefined,
-          priority: JobPriority.Plain,
-          execute: async () => await this.processBlock(this._fieldMatrix[i][j]),
-        }
-        Jobs.push(job);
+        await this.processBlock(this._fieldMatrix[i][j]);
       }
     }
     return true;
@@ -421,28 +411,23 @@ export default class Mod_Farm {
 }
 
 class Job_Farming implements JobUnit {
-  cursor: number;
   jobIdentifier: symbol | null;
   jobDisplayName: string;
   createdAt: number;
-  promisePause?: Promise<void> | undefined = undefined;
   priority: JobPriority;
-  jobs: JobUnit[];
   validate? (): Promise<boolean>;
   prepare? (): Promise<boolean>;
   execute: () => Promise<boolean>;
   finalize? (): Promise<boolean>;
 
   constructor(M: Mod_Farm) {
-    this.cursor = 0,
     this.jobIdentifier = kJobFarming,
     this.jobDisplayName = "Farming",
     this.createdAt = Date.now(),
     this.priority = JobPriority.Plain,
-    this.jobs = [],
     this.validate = async () => M.testV(),
     this.prepare = async () => await M.getReadyToPlant(),
-    this.execute = async () => await M.executing(this.jobs),
+    this.execute = async () => await M.executing(),
     this.finalize = async () => M.testF()
   }
 }
