@@ -1,0 +1,274 @@
+E:\DurkaProjects\minecraft-assistants\test>node test_bot.js
+VALIDATE TESTED SUCCESSFULLY
+Welcome to 'Assistant_0' assistant control panel
+Type 'help' to get full command list & info
+Type 'stat' or 'mon' to open live status monitor
+Type 'quit' or 'exit' to stop the bot and close this window
+> [
+  [
+    Vec3 { x: 276, y: 64, z: 306 },
+    Vec3 { x: 276, y: 64, z: 307 },
+    Vec3 { x: 276, y: 64, z: 308 },
+    Vec3 { x: 276, y: 64, z: 309 },
+    Vec3 { x: 276, y: 64, z: 310 },
+    Vec3 { x: 276, y: 64, z: 311 },
+    Vec3 { x: 276, y: 64, z: 312 },
+    Vec3 { x: 276, y: 64, z: 313 },
+    Vec3 { x: 276, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 277, y: 64, z: 306 },
+    Vec3 { x: 277, y: 64, z: 307 },
+    Vec3 { x: 277, y: 64, z: 308 },
+    Vec3 { x: 277, y: 64, z: 309 },
+    Vec3 { x: 277, y: 64, z: 310 },
+    Vec3 { x: 277, y: 64, z: 311 },
+    Vec3 { x: 277, y: 64, z: 312 },
+    Vec3 { x: 277, y: 64, z: 313 },
+    Vec3 { x: 277, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 278, y: 64, z: 306 },
+    Vec3 { x: 278, y: 64, z: 307 },
+    Vec3 { x: 278, y: 64, z: 308 },
+    Vec3 { x: 278, y: 64, z: 309 },
+    Vec3 { x: 278, y: 64, z: 310 },
+    Vec3 { x: 278, y: 64, z: 311 },
+    Vec3 { x: 278, y: 64, z: 312 },
+    Vec3 { x: 278, y: 64, z: 313 },
+    Vec3 { x: 278, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 279, y: 64, z: 306 },
+    Vec3 { x: 279, y: 64, z: 307 },
+    Vec3 { x: 279, y: 64, z: 308 },
+    Vec3 { x: 279, y: 64, z: 309 },
+    Vec3 { x: 279, y: 64, z: 310 },
+    Vec3 { x: 279, y: 64, z: 311 },
+    Vec3 { x: 279, y: 64, z: 312 },
+    Vec3 { x: 279, y: 64, z: 313 },
+    Vec3 { x: 279, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 280, y: 64, z: 306 },
+    Vec3 { x: 280, y: 64, z: 307 },
+    Vec3 { x: 280, y: 64, z: 308 },
+    Vec3 { x: 280, y: 64, z: 309 },
+    Vec3 { x: 280, y: 64, z: 310 },
+    Vec3 { x: 280, y: 64, z: 311 },
+    Vec3 { x: 280, y: 64, z: 312 },
+    Vec3 { x: 280, y: 64, z: 313 },
+    Vec3 { x: 280, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 281, y: 64, z: 306 },
+    Vec3 { x: 281, y: 64, z: 307 },
+    Vec3 { x: 281, y: 64, z: 308 },
+    Vec3 { x: 281, y: 64, z: 309 },
+    Vec3 { x: 281, y: 64, z: 310 },
+    Vec3 { x: 281, y: 64, z: 311 },
+    Vec3 { x: 281, y: 64, z: 312 },
+    Vec3 { x: 281, y: 64, z: 313 },
+    Vec3 { x: 281, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 282, y: 64, z: 306 },
+    Vec3 { x: 282, y: 64, z: 307 },
+    Vec3 { x: 282, y: 64, z: 308 },
+    Vec3 { x: 282, y: 64, z: 309 },
+    Vec3 { x: 282, y: 64, z: 310 },
+    Vec3 { x: 282, y: 64, z: 311 },
+    Vec3 { x: 282, y: 64, z: 312 },
+    Vec3 { x: 282, y: 64, z: 313 },
+    Vec3 { x: 282, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 283, y: 64, z: 306 },
+    Vec3 { x: 283, y: 64, z: 307 },
+    Vec3 { x: 283, y: 64, z: 308 },
+    Vec3 { x: 283, y: 64, z: 309 },
+    Vec3 { x: 283, y: 64, z: 310 },
+    Vec3 { x: 283, y: 64, z: 311 },
+    Vec3 { x: 283, y: 64, z: 312 },
+    Vec3 { x: 283, y: 64, z: 313 },
+    Vec3 { x: 283, y: 64, z: 314 }
+  ],
+  [
+    Vec3 { x: 284, y: 64, z: 306 },
+    Vec3 { x: 284, y: 64, z: 307 },
+    Vec3 { x: 284, y: 64, z: 308 },
+    Vec3 { x: 284, y: 64, z: 309 },
+    Vec3 { x: 284, y: 64, z: 310 },
+    Vec3 { x: 284, y: 64, z: 311 },
+    Vec3 { x: 284, y: 64, z: 312 },
+    Vec3 { x: 284, y: 64, z: 313 },
+    Vec3 { x: 284, y: 64, z: 314 }
+  ]
+]
+I am ready to plant.
+This block X=276 Y=63 Z=306 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=307 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=308 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=309 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=310 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=311 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=312 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=313 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=276 Y=63 Z=314 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=314 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=313 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=312 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=311 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=310 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=309 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=308 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=307 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=277 Y=63 Z=306 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=306 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=307 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=308 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=309 is FARMLAND.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=310 is FARMLAND.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=311 is FARMLAND.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=312 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=313 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=278 Y=63 Z=314 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=279 Y=63 Z=314 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=279 Y=63 Z=313 isn't farmland.
+This block is successfully farmed.
+Block processed.
+
+
+This block X=279 Y=63 Z=312 is FARMLAND.
+йThis block is successfully farmed.
+Block processed.
+
+
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20) {
+  errno: -4077,
+  code: 'ECONNRESET',
+  syscall: 'read'
+}
+quit
+йquit
+Unknown command: 'йquit'. Type 'help' to show available commands
+> quit
+quit
+
+Saving databases before exit...
+Saved 'common' database
+Saved 'locations' database
+Database saving completed.
