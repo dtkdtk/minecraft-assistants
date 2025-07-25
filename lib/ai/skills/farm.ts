@@ -12,7 +12,7 @@ const MODULE_NAME = "Mod_Farm"
 const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
 const CROPS = ["wheat", "beetroots", "carrots", "potatoes"];
-const AVAILABLE_BLOCKS = ["farmland", "dirt", "grass_block"];
+const DIRT_BLOCKS = ["farmland", "dirt", "grass_block"];
 const kLocationChest = "chest";
 const kJobFarming = Symbol("job:farm");
 
@@ -345,7 +345,7 @@ export default class Mod_Farm {
     }
 
     const underBlock = this.B.bot.blockAt(new Vec3(block.x, block.y - 1, block.z));
-    if (!(underBlock == null || AVAILABLE_BLOCKS.includes(underBlock.name))) {
+    if (!(underBlock == null || DIRT_BLOCKS.includes(underBlock.name))) {
       debugLog(`There is skipped block: ${stringifyCoordinates(block)}.`);
       block = null;
       return true;
@@ -371,7 +371,7 @@ export default class Mod_Farm {
       return false;
     }
 
-    if (UnderBlock.name == AVAILABLE_BLOCKS[0]) {   // farmland
+    if (UnderBlock.name == DIRT_BLOCKS[0]) {   // farmland
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} is FARMLAND.`)
       if (!await this.procFarmlandBlock(block, underBlock)) {
         debugLog(`Can't process this block.`);
@@ -379,7 +379,7 @@ export default class Mod_Farm {
       }
     } 
 
-    if (UnderBlock.name == AVAILABLE_BLOCKS[1] || UnderBlock.name == AVAILABLE_BLOCKS[2]) {  // dirt || grass_block
+    if (UnderBlock.name == DIRT_BLOCKS[1] || UnderBlock.name == DIRT_BLOCKS[2]) {  // dirt || grass_block
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} isn't farmland.`);
 
     }
@@ -390,8 +390,12 @@ export default class Mod_Farm {
 
   async procFarmlandBlock(block: Vec3, underBlock: Vec3): Promise<boolean> {
     const Block = this.B.bot.blockAt(block);
+    if (Block == null) {            // Block cannot be a null, but VSC can't understand it :(
+      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS.`);
+      return false;
+    }
     const UnderBlock = this.B.bot.blockAt(underBlock);
-    if (UnderBlock == null) {      // underBlock cannot be a null, but VSC can't understand it :(
+    if (UnderBlock == null) {       // the same
       this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS.`);
       return false;
     }
@@ -403,14 +407,15 @@ export default class Mod_Farm {
     if (!this.hasNeededItems) return false;
     const inventoryItems = this.B.bot.inventory.items();
 
-    if (block == null) {
+    if (Block.type == 0) {
+      debugLog(`Planting seeds...`)
       const seed = inventoryItems.find(item => SEEDS.includes(item.name));
       if (!seed) return false;
       await this.B.bot.equip(seed, "hand");
       await this.B.bot.lookAt(underBlock)
       await this.B.bot.activateBlock(UnderBlock);
       await this.B.bot.unequip("hand");
-    }
+    } else debugLog(`${Block.type}`)
 
     return true;
   }
