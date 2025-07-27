@@ -12,6 +12,7 @@ const MODULE_NAME = "Mod_Farm"
 const HOES = ["wooden_hoe", "stone_hoe", "iron_hoe", "diamond_hoe", "golden_hoe", "netherite_hoe"];
 const SEEDS = ["wheat_seeds", "beetroot_seeds", "carrot", "potato"];
 const CROPS = ["wheat", "beetroots", "carrots", "potatoes"];
+const CROPS_IDS = [152, 497, 306, 307];
 const DIRT_BLOCKS = ["farmland", "dirt", "grass_block"];
 const kLocationChest = "chest";
 const kJobFarming = Symbol("job:farm");
@@ -23,9 +24,9 @@ const chestPoint: LocationPoint = {
   key: "chestPoint",
   type: LocationType.Point,
   
-  x: 280,   // 280, 64, 300
+  x: 280,
   y: 64,
-  z: 300,   // 260, 65, 280
+  z: 300,
 }
 
 const fieldLocation: LocationRegion = {
@@ -106,13 +107,12 @@ export default class Mod_Farm {
   async getReadyToPlant(): Promise<boolean> {
     if (!this.hasNeededItems()) {
       debugLog("I hasn't needed items; trying to find it...");
-      if (!await this.takeNeededItems()) return false;
+      if (!await this.interactWithChest(true)) return false;
     }
     if (!this.createFieldMatrix()) {
       this.B.warn(`[${MODULE_NAME}] Can't create field matrix.`);
       return false;
     }
-    if (!this.createFieldMatrix()) return false;
     debugLog("I am ready to plant.");
     return true;
   }
@@ -169,7 +169,7 @@ export default class Mod_Farm {
     return returnCorner;
   }
 
-  async takeNeededItems(): Promise<boolean> {
+  async interactWithChest(takeOrPut: boolean): Promise<boolean> {
     // Taking chest's coordinates
     const chestPoint = await this.getChestLocation();
     if (chestPoint == null) {
@@ -194,14 +194,15 @@ export default class Mod_Farm {
 
     // Opening the chest
     await this.B.bot.lookAt(chestBlock.position.offset(0.5, 0.5, 0.5));
-    debugLog("I looked at the chest.");
-    await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.5 }))); // TODO: test, did this really needed timeout?
+    await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.2 })));
     const chest = await this.B.bot.openChest(chestBlock);
     const itemsInChest = chest.containerItems();
+    const inventoryItems = this.B.bot.inventory.items();
 
+    if (takeOrPut) {
 
     if (itemsInChest.length == 0) {
-      this.B.warn(`[${MODULE_NAME}] There is no items in the chest.`);
+      this.B.warn(`[${MODULE_NAME}] There is no any items in the chest.`);
       chest.close();
       return false;
     }
@@ -216,7 +217,6 @@ export default class Mod_Farm {
 
     // Taking needed items
     let tookItems = false;
-    const inventoryItems = this.B.bot.inventory.items();
     if (!(inventoryItems.some((item: Item | null) => 
       item !== null && HOES.includes(item.name)))) {
         const hoeItem = itemsInChest.find(item => item && HOES.includes(item.name));
@@ -235,7 +235,7 @@ export default class Mod_Farm {
         const seedsItem = itemsInChest.find(item => item && SEEDS.includes(item.name));
         if (seedsItem) {
           await chest.withdraw(seedsItem.type, null, seedsItem.count);
-          debugLog(`I took seeds: ${seedsItem.name}`);
+          debugLog(`I took seeds: ${seedsItem.count} ${seedsItem.name}`);
           tookItems = true;
       } else {
           this.B.warn(`[${MODULE_NAME}] There is no any seeds.`);
@@ -249,8 +249,17 @@ export default class Mod_Farm {
       return false;
     }
 
+    }
+
+    if (!takeOrPut) {
+      for (let i = 0; i < inventoryItems.length; i++) {
+        await chest.deposit(inventoryItems[i].type, null, inventoryItems[i].count);
+        await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.05 })));
+      }
+    }
+
     chest.close();
-    debugLog("I took needed items.");
+    debugLog("I interacted with chest.");
     return true;
   }
 
@@ -315,7 +324,6 @@ export default class Mod_Farm {
       }
       this._fieldMatrix.push(row);
     }
-    console.log(this._fieldMatrix);
     return true;
   }
 
@@ -337,6 +345,7 @@ export default class Mod_Farm {
 
   async processBlock(block: Vec3 | null): Promise<boolean> {
     if (block == null) return true;
+
     const Block = this.B.bot.blockAt(block);
     if (!(Block == null || Block.name == "air" || CROPS.includes(Block.name))) {
       debugLog(`There is skipped block: ${stringifyCoordinates(block)}.`);
@@ -346,7 +355,7 @@ export default class Mod_Farm {
 
     const underBlock = this.B.bot.blockAt(new Vec3(block.x, block.y - 1, block.z));
     if (!(underBlock == null || DIRT_BLOCKS.includes(underBlock.name))) {
-      debugLog(`There is skipped block: ${stringifyCoordinates(block)}.`);
+      debugLog(`Block ${stringifyCoordinates(block)} is skipped (${underBlock?.displayName}).`);
       block = null;
       return true;
     }
@@ -371,6 +380,8 @@ export default class Mod_Farm {
       return false;
     }
 
+    if (!this.hasNeededItems) return false;
+
     if (UnderBlock.name == DIRT_BLOCKS[0]) {   // farmland
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} is FARMLAND.`)
       if (!await this.procFarmlandBlock(block, underBlock)) {
@@ -381,7 +392,14 @@ export default class Mod_Farm {
 
     if (UnderBlock.name == DIRT_BLOCKS[1] || UnderBlock.name == DIRT_BLOCKS[2]) {  // dirt || grass_block
       debugLog(`This block ${stringifyCoordinates(new Vec3(block.x, block.y - 1, block.z))} isn't farmland.`);
-
+      if (!await this.useItem(UnderBlock, false)) {
+        debugLog(`Can't process this block.`);
+        return false;
+      }
+      if (!await this.procFarmlandBlock(block, underBlock)) {
+        debugLog(`Can't process this block.`);
+        return false;
+      }
     }
 
     debugLog(`This block is successfully farmed.`);
@@ -391,33 +409,64 @@ export default class Mod_Farm {
   async procFarmlandBlock(block: Vec3, underBlock: Vec3): Promise<boolean> {
     const Block = this.B.bot.blockAt(block);
     if (Block == null) {            // Block cannot be a null, but VSC can't understand it :(
-      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS.`);
+      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS. error code: 1`);
       return false;
     }
     const UnderBlock = this.B.bot.blockAt(underBlock);
     if (UnderBlock == null) {       // the same
-      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS.`);
+      this.B.warn(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS. error code: 2`);
       return false;
     }
     if (!this.isBlockWatered(UnderBlock)){
-      debugLog(`This farmland isn't supplied with water.`)
+      debugLog(`This farmland isn't supplied with water.`);
       return false;
     }
 
-    if (!this.hasNeededItems) return false;
-    const inventoryItems = this.B.bot.inventory.items();
-
-    if (Block.type == 0) {
-      debugLog(`Planting seeds...`)
-      const seed = inventoryItems.find(item => SEEDS.includes(item.name));
-      if (!seed) return false;
-      await this.B.bot.equip(seed, "hand");
-      await this.B.bot.lookAt(underBlock)
-      await this.B.bot.activateBlock(UnderBlock);
-      await this.B.bot.unequip("hand");
-    } else debugLog(`${Block.type}`)
+    if (Block.type == 0) {   // 0 - air id
+      await this.useItem(UnderBlock, true);
+    } 
+    else if (CROPS_IDS.includes(Block.type)) {
+      if ((Block.type == CROPS_IDS[1] && Block.metadata == 3) || Block.metadata == 7) {
+        await this.B.bot.dig(Block);
+        await this.useItem(UnderBlock, true);
+        await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.2 })));
+      }
+    } 
+    else { 
+      debugLog(`${Block.type}`)
+      debugLog(`[${MODULE_NAME}] !!! UNEXPECTED ERROR AT processFarmlandBlock(), REPORT DEVELOPERS. error code: 3`);
+      return false;
+    }
 
     return true;
+  }
+
+  async useItem(UnderBlock: Block, seedOrHoe: boolean) {
+    const inventoryItems = this.B.bot.inventory.items();
+    let itemsArray: string[];
+    if (seedOrHoe) itemsArray = SEEDS;
+    else itemsArray = HOES;
+    const instrument = inventoryItems.find(item => itemsArray.includes(item.name));
+    if (!instrument) {
+      this.B.warn(`[${MODULE_NAME}] I hasn't needed items`)
+      return false;
+    }
+    try {
+      await this.B.bot.unequip("hand");
+      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.2 })));
+      await this.B.bot.equip(instrument, "hand");
+      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.2 }))); 
+
+      await this.B.bot.activateBlock(UnderBlock);
+      await new Promise(resolve => setTimeout(resolve, Durat({ sec: 0.1 })));
+
+      await this.B.bot.unequip("hand");
+      return true;
+
+    } catch (error) {
+      this.B.warn(`[${MODULE_NAME}] Using failed, report developers. error code: 4`);
+      return false;
+    }
   }
 
   isBlockWatered(block: Block): boolean {
@@ -453,14 +502,9 @@ export default class Mod_Farm {
   * 
   */
 
-  testF() {
-    debugLog("FINALIZE TESTED SUCCESSFULLY");
+  async putItemsAway(): Promise<boolean> {
+    if (!await this.interactWithChest(false)) return false;
     return true;
-  }
-
-  testP() {
-    debugLog(`PAUSE TESTED SUCCESSFULLY`);
-    return;
   }
 
 }
@@ -483,6 +527,6 @@ class Job_Farming implements JobUnit {
     this.validate = async () => M.testV(),
     this.prepare = async () => await M.getReadyToPlant(),
     this.execute = async () => await M.createJobsQueue(),
-    this.finalize = async () => M.testF()
+    this.finalize = async () => await M.putItemsAway()
   }
 }
