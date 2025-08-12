@@ -1,2 +1,2 @@
-import { createMinecraftAssistantBot } from "../dist/lib/init_bot.js";
+import { createMinecraftAssistantBot } from "../dist/core/init_bot.js";
 createMinecraftAssistantBot(JSON.parse(process.env.BOT_CONFIGURATION));
