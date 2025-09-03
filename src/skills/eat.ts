@@ -1,7 +1,7 @@
 import mcdata from "minecraft-data";
 import { type Item } from "prismarine-item";
-import { type BotSkill, Durat, JobPriority, type JobUnit } from "../lib/index.js";
-import type Brain from "../lib/brain.js";
+import { type BotSkill, Durat, JobPriority, type JobUnit } from "../core/index.js";
+import type Brain from "../core/brain.js";
 
 const MODULE_NAME = "Mod_Eat";
 

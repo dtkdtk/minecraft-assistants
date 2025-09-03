@@ -1,10 +1,9 @@
-/test/test_bot_cfg.js
-/test/data/
-/exe/data/
-/exe/configuration.conf
 /dist/
-/SANDBOX.js
+/build/
+/SANDBOX.*
 __PRIVATE__
+/test/pen-test/test_bot_cfg.js
+/test/*/data/
 
 # Logs
 logs

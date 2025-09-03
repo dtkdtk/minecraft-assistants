@@ -1,6 +1,6 @@
-const configFile_supportedLanguages = ""
-  + `; - 'EN' (English)\n`
-  + `; - 'RU' (Русский)\n`
+const availableLanguages = ""
+  + `- 'EN' (English)\n`
+  //+ `- 'RU' (Русский)\n`
 ;
 
 export const en = {
@@ -18,8 +18,11 @@ export const en = {
       + `project_version = ${stringifyValue(sect.project_version)}\n`
       + `\n`
       + `; Supported languages:\n`
-      + configFile_supportedLanguages
+      + availableLanguages.split("\n").slice(0, -1).map(X => "; " + X).join("\n") + "\n"
       + `language = ${stringifyValue(sect.language)}\n`
+      + `\n`
+      + `; Do not edit manually!\n`
+      + `installed_game_versions = ${stringifyValue(sect.installed_game_versions)}\n`
       + `\n`
       + `; [FOR DEVELOPERS] Enable debug information\n`
       + `enable_debug = ${stringifyValue(sect.enable_debug)}\n`
@@ -37,6 +40,9 @@ export const en = {
       + `; - 'unofficial' (sometimes called 'offline' or 'pirate')\n`
       + `; - <microsoft & mojang are in development>\n`
       + `authentication = ${stringifyValue(sect.authentication)}\n`
+      + `\n`
+      + `; Game version\n`
+      + `game_version = ${stringifyValue(sect.game_version)}\n`
       + `\n`
       + `; Server IP-address (e.g. minecraft-server.play or 127.0.0.1:12345)\n`
       + `server_ip = ${stringifyValue(sect.server_ip)}\n`
@@ -66,36 +72,51 @@ export const en = {
   no: "no",
   enterYesOrNo: "Please enter YES or NO.",
   startupMsg: "minecraft-assistants :: Starting the bot...",
+  availableVersions: "Available versions (and size):",
   errors: {
-    baseForm: (message, errorDetailedInfo) => ""
+    unexpected: (message, errorDetailedInfo) => ""
       + "\u274C ERROR :: " + message + "\n////////////////////\n"
       + errorDetailedInfo,
     fs: {
       createConfigFile: (fileName) => `(File System) Cannot create '${fileName}' file in the current directory.`,
       readConfigFile: (fileName) => `(File System) Cannot read '${fileName}' file in the current directory.`,
     },
-    recreatingConfigFile: "✖ 'configuration.conf' file contains INI-syntax errors,\n"
-      + "or the 'project_version' property is missing.\n"
-      + "Delete the configuration file and recreate it with default settings?",
+    invalidConfigFile: "\u274C 'configuration.conf' file contains INI-syntax errors,\n"
+      + "or the 'project_version' property is missing.\n",
     abortRecreatingConfigFile: "You aborted recreation of the 'configuration.conf' file.\n"
       + "Fix errors by yourself and re-launch the bot again.",
     configAdaption: (propName, propRawValue, sectName, stringifyValue) => [
-      "Invalid configuration property value!",
+      "\u274C Invalid configuration property value!",
       `  Section name: [${sectName}]\n`
       + `  Property:\n`
       + `    ${propName} = ${stringifyValue(propRawValue)}\n`
       + `  Please make sure you have set the correct property value.`
     ],
+    incorrectVersion: (version) => `\u274C Incorrect game version: ${version}`,
   },
   questions: {
-    General: {
-      language: "What's your language?",
+    text: {
+      language: "\n///// LANGUAGE SETUP /////\n"
+        + "Welcome to minecraft-assistants!\n",
+      recreateConfigFile: null,
+      nickname: "Enter the bot's nickname:",
+      server_ip: "Enter server IP-address:\n    (e.g. minecraft-server.play or 127.0.0.1:12345)",
+      game_version: "Enter server game version:",
     },
-    EachBot: {
-      nickname: "Please enter the bot's nickname:\n    (allowed only A-Z letters, numbers and underscore)",
+    prompt: {
+      language: "Please select your language. Available languages:\n"
+        + availableLanguages,
+      recreateConfigFile: "Delete the configuration file and recreate it with default settings? (%s/%s)",
+      nickname: "    (allowed only A-Z letters, numbers and underscore)",
+      server_ip: null,
+      game_version: "Available versions: \n%s",
     },
-    AnyBot: {
-      server_ip: "Please enter the server IP-address:\n    (e.g. minecraft-server.play or 127.0.0.1:12345)",
+    error: {
+      language: (answer) => `\u274C Language '${answer}' not found!`,
+      recreateConfigFile: null,
+      nickname: (_) => `\u274C Nickname contains disallowed symbols!`,
+      server_ip: null,
+      game_version: (answer) => `\u274C Incorrect game version: '${answer}'`,
     },
   },
 };
