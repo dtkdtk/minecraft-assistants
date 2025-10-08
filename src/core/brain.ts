@@ -78,6 +78,8 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
     if (this.skills.size > 0) this.skills.clear();
     if (this.skillsDir) await this.skillsDir.close();
     const dirPath = joinPath(process.cwd(), this.configuration.skillsDirPath!);
+    if (!libFs.existsSync(dirPath))
+      throw new Error("Cannot find bot skills directory.\n\tNeeded path: '" + dirPath + "'");
     this.skillsDir = libFs.opendirSync(dirPath);
     for await (const skillEnt of this.skillsDir) {
       if (!skillEnt.isFile() || !skillEnt.name.endsWith(".js")) continue;
