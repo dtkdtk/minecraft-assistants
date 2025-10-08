@@ -547,8 +547,8 @@ function cast_Nullable(cast_NonNullable) {
 function cast_ArrayOf(cast_Element) {
   return (X) => (X
     .replace(/(^\[)|(\]$)/g, "")
-    .split(/(?<!\\)\,/)
-    .map(A => A.replace(/\\\,/g, ","))
+    .split(/(?<!\\),/)
+    .map(A => A.replace(/\\,/g, ","))
     .map(A => A.replace(/\\\\/g, "\\"))
     .map(A => A.trim())
     .filter(A => A != "")
@@ -564,7 +564,7 @@ function stringifyConfigValue(X) {
     return libIni.safe(X);
   }
   else if (Array.isArray(X)) {
-    return "[" + X.map(stringifyConfigValue).map(V => V?.replace(/\,/g, "\\,")).join(", ") + "]";
+    return "[" + X.map(stringifyConfigValue).map(V => V?.replace(/,/g, "\\,")).join(", ") + "]";
   }
   else if (typeof X == "undefined" || X === null) {
     return "null";

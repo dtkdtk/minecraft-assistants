@@ -1,4 +1,4 @@
-import { createMinecraftAssistantBot } from "../dist/lib/init_bot.js";
+import { createMinecraftAssistantBot } from "../../dist/core/init_bot.js";
 import testBotCfg from "./test_bot_cfg.js";
 
 const config = {
