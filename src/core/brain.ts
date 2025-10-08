@@ -92,7 +92,7 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
         this.warn(`Invalid skill file: '${skillEnt.name}', error: 'No default export'`);
         continue;
       }
-      const SkillClass = skill.default as new (brain: Brain) => BotSkill;
+      const SkillClass = skill.default as (new (brain: Brain) => BotSkill);
 
       try {
         const skillInstance = new SkillClass(this);

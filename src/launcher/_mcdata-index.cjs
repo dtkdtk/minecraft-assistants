@@ -1,5 +1,6 @@
 //Patched version of 'node_modules/minecraft-data/data.js'
 //Added dynamic version loading
+/* eslint-disable */
 const {readFileSync} = require("fs");
 const {sep} = require("path");
 
