@@ -7,10 +7,9 @@ import libFs from "fs";
 import libReadline from "readline/promises";
 import libChalk from "chalk";
 import libCp from "child_process";
-import { join as joinPath, parse as parsePath } from "path";
+import { join as joinPath } from "path";
 import { format as formatString } from "util";
 import * as allLocales from "./messages.js";
-import availableMcVersions from "./available-mc-versions.json" with {type:"json"};
 
 const CURRENT_VERSION = "0.3.0";
 const CONFIGURATION_FORMAT_VERSIONS = ["0.1.0"]; //Minimum versions with breaking changes in the config format; first = oldest
@@ -29,17 +28,19 @@ const CONFIGURATION_FILE_PATH = process.env.CONFIGURATION_FILE_PATH
   ?? joinPath(process.cwd(), CONFIGURATION_FILE_NAME);
 
 const SUBTHREAD_PATH = process.env.SUBTHREAD_PATH
-  ?? joinPath(process.cwd(), "program", "subthread.js");
+  ?? joinPath(process.cwd(), "program", "subthread.js"
+);
+const GAME_VERSIONS_INDEX_PATH = process.env.GAME_VERSIONS_INDEX_PATH
+  ?? joinPath(process.cwd(), "program", "mcversions-index.json");
 
 const MCA_ENTRY_PATH = process.env.MCA_ENTRY_PATH
   ?? joinPath(process.cwd(), "program", "mca-bundle.cjs");
-
-const INSTALLED_GAME_VERSIONS_STORE_PATH = process.env.INSTALLED_GAME_VERSIONS_STORE_PATH
-  ?? joinPath(process.cwd(), "game-versions", "pc");
 //#endregion
 
+const mcVersionsIndex = JSON.parse(libFs.readFileSync(GAME_VERSIONS_INDEX_PATH).toString("utf-8"));
+
 const BOT_SECTION_PREFIX = "Bot:";
-const DEFAULT_BOT_NAME = BOT_SECTION_PREFIX + "Assistant_0";
+const DEFAULT_BOT_NAME = "Assistant_0";
 const DEFAULT_CONFIGURATION_DATA = () => get_Default_Configuration_From_Schema(CURRENT_VERSION);
 
 
@@ -69,13 +70,6 @@ const CONFIGURATION_SCHEMES = {
         value: false,
         required: false,
         validate: undefined,
-        getAvailableOptionsStr: undefined,
-      },
-      installed_game_versions: {
-        cast: cast_ArrayOf(cast_String),
-        value: [],
-        required: false,
-        validate: (A) => cast_HumanBoolean(A) !== null,
         getAvailableOptionsStr: undefined,
       },
     },
@@ -108,7 +102,8 @@ const CONFIGURATION_SCHEMES = {
         value: null,
         required: true,
         validate: isValidGameVersion,
-        getAvailableOptionsStr: () => toColumnsList(getAvailableGameVersions_WithSize().map(X => X.padEnd(40)), 3).join("\n"),
+        getAvailableOptionsStr: () => toColumnsList(getAvailableGameVersions()
+          .map(X => X.padEnd(15)), 3).join("\n"),
       },
     },
   }),
@@ -321,7 +316,7 @@ function getSectionPropsSchemaEntries(sectionName, schema) {
 
 function get_Default_Configuration_From_Schema(version) {
   const minVersion = resolveMinimumConfigVersion(version);
-  const configuration = { General: {}, [DEFAULT_BOT_NAME]: {} };
+  const configuration = { General: {}, [BOT_SECTION_PREFIX + DEFAULT_BOT_NAME]: {} };
   for (const [propKey, {value}] of Object.entries(CONFIGURATION_SCHEMES[minVersion]().section_general)) {
     configuration.General[propKey] = value;
   }
@@ -329,7 +324,7 @@ function get_Default_Configuration_From_Schema(version) {
     ...Object.entries(CONFIGURATION_SCHEMES[minVersion]().section_any_bot),
     ...Object.entries(CONFIGURATION_SCHEMES[minVersion]().section_each_bot),
   ]) {
-    configuration[DEFAULT_BOT_NAME][propKey] = value;
+    configuration[BOT_SECTION_PREFIX + DEFAULT_BOT_NAME][propKey] = value;
   }
   return configuration;
 }
@@ -396,7 +391,6 @@ function resolveMinimumConfigVersion(versionString = undefined) {
 //#region Game version handling
 
 async function handleGameVersions(configuration) {
-  let needInstallVersions = [];
   for (const botKey of Object.keys(configuration).filter(K => K.startsWith(BOT_SECTION_PREFIX))) {
     const botCfg = configuration[botKey] ?? {};
     if (!isValidGameVersion(botCfg.game_version)) {
@@ -404,53 +398,22 @@ async function handleGameVersions(configuration) {
       const newVersion = await sendQuestion(
         "game_version",
         isValidGameVersion,
-        [toColumnsList(getAvailableGameVersions_WithSize().map(X => X.padEnd(40)), 3)],
+        [toColumnsList(getAvailableGameVersions()
+          .map(X => X.padEnd(15)), 3)],
         () => (saveConfigFile(configuration), process.exit(0)),
       );
-      needInstallVersions.push(newVersion);
       botCfg.game_version = newVersion;
       saveConfigFile(configuration);
     }
-    if (!configuration.General.installed_game_versions.includes(botCfg.game_version))
-      needInstallVersions.push(botCfg.game_version);
-  }
-  if (needInstallVersions.length) {
-    configuration.General.installed_game_versions.push(...needInstallVersions);
-    await Promise.all(needInstallVersions.map(installGameVersion));
-    configuration[kNeedReSave] = true;
   }
 }
 
-function _get_Game_Versions_Repository_Path() {
-  let path = process.cwd();
-  while (parsePath(path).root != path) {
-    const maybeRepoPath = joinPath(path, "node_modules", "minecraft-data", "minecraft-data", "data", "pc");
-    if (libFs.existsSync(maybeRepoPath)) return maybeRepoPath;
-    path = joinPath(path, "..");
-  }
-  throw new Error("(DEVELOPER ERROR) Cannot find 'minecraft-data' node module!"
-    + "\nIt is needed to install game versions (currently, the Internet version of repository is not available)");
-}
-
-async function installGameVersion(version, force = false) {
-  //TODO: www file downloading
-  //TODO: checksum validation
-  const destinationDir = joinPath(INSTALLED_GAME_VERSIONS_STORE_PATH, version);
-  if (libFs.existsSync(destinationDir) && !force) return;
-  else libFs.cpSync(joinPath(_get_Game_Versions_Repository_Path(), version), destinationDir, { recursive: true });
-}
-
-function getAvailableGameVersions_WithSize() {
-  const versions = [];
-  for (let i = 0; i < availableMcVersions.length; i++) {
-    const {version, sizeMB} = availableMcVersions[i];
-    versions.push(`${version} [${sizeMB} MB]`);
-  }
-  return versions;
+function getAvailableGameVersions() {
+  return mcVersionsIndex.pc;
 }
 
 function isValidGameVersion(version) {
-  return availableMcVersions.some(V => V.version == version);
+  return mcVersionsIndex.pc.includes(version);
 }
 
 //#endregion
@@ -488,8 +451,8 @@ async function startMultiBot(configuration) {
     Stdio + window: separate for each bot
     Multi-bot management: on (but WIP)  
   */
-  for (const botKey of allBotKeys) {
-    /*const adapted = adaptedConfigFrom(configuration, botKey);
+  /*for (const botKey of allBotKeys) {
+    const adapted = adaptedConfigFrom(configuration, botKey);
     const thread = libCp.exec("node ./subthread.js", {
       env: { BOT_CONFIGURATION: JSON.stringify(adapted) },
       shell: true
@@ -497,8 +460,8 @@ async function startMultiBot(configuration) {
 
     thread.on("error", (error) => {
       //TODO
-    });*/
-  }
+    });
+  }*/
 }
 
 //#endregion

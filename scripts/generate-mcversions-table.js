@@ -1,40 +1,36 @@
+//CWD: project root
 import * as fs from "fs";
 import * as libPath from "path";
 
-const versionsDir = "./node_modules/minecraft-data/minecraft-data/data/pc";
-const outputFile = "./src/launcher/program/available-mc-versions.json";
+if (process.cwd().split(libPath.sep).at(-1) == "scripts")
+  throw new Error("Process CWD must be project root");
 
-const dirs = fs.readdirSync(versionsDir)
+const versionsDir = "./dist/compressed-mcdata/";
+const outputFile = "./dist/mcversions-index.json";
+
+if (!fs.existsSync(versionsDir))
+  throw new Error("The '/dist/compressed-mcdata/' must be generated"
+  + "before calling '/scripts/generate-mcversions-table.js'");
+
+const allPlatforms = fs.readdirSync(versionsDir)
   .filter(item => {
     const fullPath = libPath.join(versionsDir, item);
     return fs.statSync(fullPath).isDirectory();
   });
 
-const result = [];
+const result = {};
 
-for (const dir of dirs) {
-  const fullDirPath = libPath.join(versionsDir, dir);
-  let totalSize = 0;
+for (const platform of allPlatforms) {
+  const platformVersionsDir = fs.readdirSync(libPath.join(versionsDir, platform))
+    .filter(item => {
+      const fullPath = libPath.join(versionsDir, platform, item);
+      return fs.statSync(fullPath).isDirectory();
+    });
   
-  function calculateSize(dirPath) {
-    const items = fs.readdirSync(dirPath);
-    for (const item of items) {
-      const fullPath = libPath.join(dirPath, item);
-      const stat = fs.statSync(fullPath);
-      
-      if (stat.isDirectory())
-        calculateSize(fullPath);
-      else
-        totalSize += stat.size;
-    }
+  result[platform] = [];
+  for (const version of platformVersionsDir) {
+    result[platform].push(version);
   }
-  
-  calculateSize(fullDirPath);
-  
-  result.push({
-    version: dir,
-    sizeMB: Math.round(totalSize / 1024 / 1024 * 1000) / 1000
-  });
 }
 
 fs.writeFileSync(outputFile, JSON.stringify(result));

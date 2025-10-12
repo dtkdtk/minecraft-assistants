@@ -21,9 +21,6 @@ export const en = {
       + availableLanguages.split("\n").slice(0, -1).map(X => "; " + X).join("\n") + "\n"
       + `language = ${stringifyValue(sect.language)}\n`
       + `\n`
-      + `; Do not edit manually!\n`
-      + `installed_game_versions = ${stringifyValue(sect.installed_game_versions)}\n`
-      + `\n`
       + `; [FOR DEVELOPERS] Enable debug information\n`
       + `enable_debug = ${stringifyValue(sect.enable_debug)}\n`
       + `\n`
@@ -72,7 +69,7 @@ export const en = {
   no: "no",
   enterYesOrNo: "Please enter YES or NO.",
   startupMsg: "minecraft-assistants :: Starting the bot...",
-  availableVersions: "Available versions (and size):",
+  availableVersions: "Available versions: (JAVA EDITION)",
   errors: {
     unexpected: (message, errorDetailedInfo) => ""
       + "\u274C ERROR :: " + message + "\n////////////////////\n"
