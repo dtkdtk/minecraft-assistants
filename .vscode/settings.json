@@ -24,6 +24,7 @@
     "RCON",
     "readline",
     "seald",
+    "Subjob",
     "subthread",
     "unequip",
     "Valinok"

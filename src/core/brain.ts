@@ -15,6 +15,8 @@ import {
 } from "./index.js";
 import { pathToFileURL } from "url";
 
+const kSubjobExecutionStarted = Symbol("executionStarted");
+
 export class Brain extends TypedEventEmitter<BrainEventsMap> {
   constructor(public bot: Bot, public configuration: CompletedGeneralBotOptions) {
     super();
@@ -137,9 +139,17 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
         else JU = currentJob.jobs[currentJob.cursor++];
       }
       else JU = currentJob;
-        
-      const invocationResult = await this._invokeJob(JU)
-        .catch(error => this._handleJobInvocationError(error));
+
+      let invocationResult;
+      /* Firstly, execute the aggregate's methods. Then, start sub-jobs execution. */
+      if (kSubjobExecutionStarted in currentJob && currentJob[kSubjobExecutionStarted] == true)
+        invocationResult = await this._invokeJob(JU)
+          .catch(error => this._handleJobInvocationError(error))
+          .then(() => currentJob[kSubjobExecutionStarted] = true);
+      else
+        invocationResult = await this._invokeJob(currentJob)
+          .catch(error => this._handleJobInvocationError(error));
+      
       if (!stopped) {
         if (invocationResult === true || (invocationResult === false && !JU.reExecuteAfterFail))
           this.jobs.shift();
