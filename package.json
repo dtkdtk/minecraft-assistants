@@ -1,6 +1,6 @@
 {
   "name": "minecraft-assistants",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Minecraft bots that can do some of your routine work for you.",
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "minecraft",
     "bot"
   ],
-  "author": "dtkdtk0 <dtkdtk0.mail@gmail.com>",
+  "author": "Dtk <dtkdtk0.mail@gmail.com>",
   "contributors": [
     "Valinok37"
   ],

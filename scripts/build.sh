@@ -9,7 +9,8 @@ fi
 rm -r -f ./dist
 rm -r -f ./build
 mkdir ./build
-mkdir ./build/game-versions
+mkdir ./build/repository
+mkdir ./build/repository/game-versions
 npm i --no-fund
 npx tsc
 node ./scripts/generate-compressed-mcdata.js
@@ -22,8 +23,9 @@ cp ./src/launcher/_mcdata-provider.cjs ./node_modules/minecraft-data/data.js #In
 cp ./dist/mcdata-real-index.cjs ./node_modules/minecraft-data/_real-index.js
 
 #Bundle launcher
-cp -r ./src/launcher/program ./build/program
-cp -r ./dist/compressed-mcdata/pc ./build/game-versions/pc
+cp -r ./src/launcher/program ./build/
+cp -r ./dist/compressed-mcdata/pc ./build/repository/game-versions/pc
+cp -r ./dist/skills ./build
 cp ./src/launcher/ReleaseReadme.md ./build/README.md
 cp ./LICENSE ./build/LICENSE
 cp ./package.json ./build/program/package.json

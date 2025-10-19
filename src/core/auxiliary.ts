@@ -17,8 +17,8 @@ export function isAggregateJob(job: Job | undefined | null): job is AggregateJob
 
 export function stringifyCoordinates(
   coordsLike: { x?: number, y?: number, z?: number }
-    | [x: number, y: number, z: number]
-    | [x: number, z: number]
+    | [x:number, y:number, z:number]
+    | [x:number, z:number]
 ): string {
   if (!Array.isArray(coordsLike))
     return [

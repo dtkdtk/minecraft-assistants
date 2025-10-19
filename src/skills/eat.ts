@@ -1,6 +1,6 @@
 import mcdata from "minecraft-data";
 import { type Item } from "prismarine-item";
-import { type BotSkill, Durat, JobPriority, type JobUnit } from "../core/index.js";
+import { type IMcaSkill, Durat, JobPriority, type JobUnit } from "../core/index.js";
 import type Brain from "../core/brain.js";
 
 const MODULE_NAME = "Mod_Eat";
@@ -13,7 +13,7 @@ const EXTREME_SATURATION = 6;
 const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"];
 const kJobEat = Symbol("job:eat");
 
-export default class Mod_Eat implements BotSkill {
+export default class Mod_Eat implements IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined;
   private _lastHungryMessage: number = 0;

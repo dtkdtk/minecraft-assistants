@@ -1,9 +1,7 @@
-import * as libFs from "fs";
 import { Bot } from "mineflayer";
-import { join as joinPath } from "path";
+import { SkillsHandler } from "./skills_handler/handler.js";
 import {
   type AnyFunction,
-  type BotSkill,
   type CompletedGeneralBotOptions,
   DB,
   debugLog,
@@ -13,24 +11,33 @@ import {
   type SomeFunction,
   TypedEventEmitter
 } from "./index.js";
-import { pathToFileURL } from "url";
+import { ResourceManager } from "./resource_manager.js";
 
 const kSubjobExecutionStarted = Symbol("executionStarted");
+const kBrainFriendKey = Symbol("friendKey_Brain");
 
 export class Brain extends TypedEventEmitter<BrainEventsMap> {
-  constructor(public bot: Bot, public configuration: CompletedGeneralBotOptions) {
-    super();
-    bot.once("spawn", () => { this.isBotSpawned = true });
-    process.once("SIGINT", async () => await this.exitProcess());
-    process.once("exit", wrongExitCallback);
-    this.loadSkills();
-  }
-
   isBotSpawned = false;
   warningsQueue: string[] = [];
   jobs: Job[] = [];
-  skills: Map<string, BotSkill> = new Map();
-  skillsDir?: libFs.Dir;
+  res: ResourceManager;
+  bot: Bot;
+  configuration: CompletedGeneralBotOptions;
+  #skillsHandler: SkillsHandler;
+
+  constructor(bot: Bot, configuration: CompletedGeneralBotOptions) {
+    super();
+    this.bot = bot;
+    this.configuration = configuration;
+    bot.once("spawn", () => { this.isBotSpawned = true });
+    process.once("SIGINT", async () => await this.exitProcess());
+    process.once("exit", wrongExitCallback);
+
+    this.res = new ResourceManager(kBrainFriendKey);
+    this.#skillsHandler = new SkillsHandler(this, kBrainFriendKey);
+
+    this.#skillsHandler.loadSkillsDirectory();
+  }
 
   currentJob(): Job | undefined {
     return this.jobs[0];
@@ -44,24 +51,23 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
     if (J.jobIdentifier !== null && this.jobs.some(it => it.jobIdentifier === J.jobIdentifier))
       return;
     else if (this.jobs.length > 0 && J.priority > (this.currentJob()?.priority ?? 0)) {
-      const interrupt = () => this._jobInterruptionProcess = this._handleJobInterruption(J)
+      const interrupt = () => this.#jobInterruptionProcess = this.#handleJobInterruption(J)
         .then(() => {
-          this._jobInterruptionProcess = undefined;
+          this.#jobInterruptionProcess = undefined;
           this.jobs.shift();
-          this._startJobExecution();
+          this.#startJobExecution();
         });
-      if (this._jobInterruptionProcess) this._jobInterruptionProcess.then(interrupt);
+      if (this.#jobInterruptionProcess) this.#jobInterruptionProcess.then(interrupt);
       else interrupt();
     }
     else {
       this.jobs.push(J);
-      this._startJobExecution();
+      this.#startJobExecution();
     }
   }
 
   async exitProcess(): Promise<never> {
     console.log("\nSaving databases before exit...");
-    if (this.skillsDir) await this.skillsDir.close().catch(() => {});
     for (const [dbName, database] of Object.entries(DB)) {
       database.stopAutocompaction();
       await database.compactDatafileAsync();
@@ -76,56 +82,26 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
     this.emit("newWarning", message);
     console.warn(message);
   }
-  async loadSkills() {
-    if (this.skills.size > 0) this.skills.clear();
-    if (this.skillsDir) await this.skillsDir.close();
-    const dirPath = joinPath(process.cwd(), this.configuration.skillsDirPath!);
-    if (!libFs.existsSync(dirPath))
-      libFs.mkdirSync(dirPath, { recursive: true });
-    this.skillsDir = libFs.opendirSync(dirPath);
-    for await (const skillEnt of this.skillsDir) {
-      if (!skillEnt.isFile() || !skillEnt.name.endsWith(".js")) continue;
-      debugLog(`Loading skill: '${skillEnt.name}'`);
+  
 
-      const skillPath = pathToFileURL(joinPath(skillEnt.parentPath, skillEnt.name));
-      const skill = await import(skillPath.toString())
-        .catch(E => (this.warn("Cannot load bot skill (reading phase): " + skillEnt.name + "\nError: " + (E?.message ?? "?")), null));
-      if (!skill) continue;
 
-      if (!skill.default) {
-        this.warn(`Invalid skill file: '${skillEnt.name}', error: 'No default export'`);
-        continue;
-      }
-      const SkillClass = skill.default as (new (brain: Brain) => BotSkill);
 
-      try {
-        const skillInstance = new SkillClass(this);
-        if (this.isBotSpawned) skillInstance.onGame?.();
-        else this.bot.once("spawn", () => skillInstance.onGame?.());
-        this.skills.set(skillInstance.moduleName, skillInstance);
-      }
-      catch (error: any) {
-        this.warn("Cannot load bot skill (instance phase): " + skillEnt.name + "\nError: " + (error?.message ?? "?"));
-      }
-    }
+
+
+  #jobInterruptionProcess: Promise<void> | undefined;
+  #jobExecutionStatus: boolean = false;
+  #onJobExecutionComplete?: AnyFunction;
+
+  #startJobExecution() {
+    if (this.#jobExecutionStatus || this.#jobInterruptionProcess) return;
+    this.#sortJobsQueue();
+    this.#initJobExecProcess();
   }
-
-
-
-  private _jobInterruptionProcess: Promise<void> | undefined;
-  private _jobExecutionStatus: boolean = false;
-  private _onJobExecutionComplete?: AnyFunction;
-
-  private _startJobExecution() {
-    if (this._jobExecutionStatus || this._jobInterruptionProcess) return;
-    this._sortJobsQueue();
-    this._initJobExecProcess();
-  }
-  private async _initJobExecProcess() {
+  async #initJobExecProcess() {
     let stopped = false; /* anti race-of-states */
-    if (this.jobs.length > 0) this._jobExecutionStatus = true;
+    if (this.jobs.length > 0) this.#jobExecutionStatus = true;
     while (this.jobs.length > 0) {
-      if (this._jobExecutionStatus == false) {
+      if (this.#jobExecutionStatus == false) {
         stopped = true;
         break;
       }
@@ -143,12 +119,12 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
       let invocationResult;
       /* Firstly, execute the aggregate's methods. Then, start sub-jobs execution. */
       if (kSubjobExecutionStarted in currentJob && currentJob[kSubjobExecutionStarted] == true)
-        invocationResult = await this._invokeJob(JU)
-          .catch(error => this._handleJobInvocationError(error))
+        invocationResult = await this.#invokeJob(JU)
+          .catch(error => this.#handleJobInvocationError(error))
           .then(() => currentJob[kSubjobExecutionStarted] = true);
       else
-        invocationResult = await this._invokeJob(currentJob)
-          .catch(error => this._handleJobInvocationError(error));
+        invocationResult = await this.#invokeJob(currentJob)
+          .catch(error => this.#handleJobInvocationError(error));
       
       if (!stopped) {
         if (invocationResult === true || (invocationResult === false && !JU.reExecuteAfterFail))
@@ -158,14 +134,14 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
       }
     }
     if (!stopped) {
-      this._jobExecutionStatus = false;
-      if (this._onJobExecutionComplete) setImmediate(() => this._onJobExecutionComplete!());
+      this.#jobExecutionStatus = false;
+      if (this.#onJobExecutionComplete) setImmediate(() => this.#onJobExecutionComplete!());
     }
   }
   /**
    * @returns `true` if successfully executed, `false` if failed, `null` if interrupted
    */
-  private async _invokeJob(J: JobUnit): Promise<boolean | null> {
+  async #invokeJob(J: JobUnit): Promise<boolean | null> {
     if (J.promisePause !== undefined) return null;
     if (J.validate) {
       const isActual = await J.validate();
@@ -186,29 +162,29 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
     if (!result) return (await J.failure?.(), false);
     return true;
   }
-  private _handleJobInvocationError(error: any) {
+  #handleJobInvocationError(error: any) {
     if (error instanceof BrainIgnoredError) return;
     console.error("Job invocation error:\n", error);
   }
-  private _sortJobsQueue() {
+  #sortJobsQueue() {
     this.jobs.sort((A, B) => B.priority - A.priority);
   }
   /**
    * Will add job to the job queue.
    * @param J interrupting job
    */
-  private async _handleJobInterruption(J: Job) {
+  async #handleJobInterruption(J: Job) {
     const current = this.currentJob();
     this.jobs.unshift(J);
     let unpauseFn: SomeFunction | undefined;
     const promisePause = new Promise<void>((res) => { unpauseFn = res; });
 
-    this._jobExecutionStatus = false;
+    this.#jobExecutionStatus = false;
     if (current !== undefined) {
       current.promisePause = promisePause;
       await current.finalize?.().catch(() => {});
     }
-    await this._invokeJob(J).catch(() => this._handleJobInterruption(J));
+    await this.#invokeJob(J).catch(() => this.#handleJobInterruption(J));
     if (J.promisePause) await J.promisePause;
     unpauseFn?.();
   }

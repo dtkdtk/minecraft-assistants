@@ -198,10 +198,22 @@ export namespace DatabaseTypes {
 
 
 
-/** All bot skill classes must implement this interface. */
-export interface BotSkill {
-  readonly moduleName: string;
-
-  /** Will be executed when the bot enters the game. */
-  onGame? (): Promise<void> | void;
+export class SecurityViolation extends Error {
+  constructor(details?: string) {
+    super("The program detected internal security violation."
+      + (details ? "\nDetails: " + details : ''));
+  }
+}
+export class RestrictedAccessViolation extends SecurityViolation {
+  constructor(className: string, memberName: string) {
+    super(`${className}.${memberName} requires a friendKey to grant access`);
+  }
+}
+export class AccessDeniedError extends SecurityViolation {
+  constructor(message: string,
+    public resource?: string,
+    public request?: string,
+  ) {
+    super(message);
+  }
 }

@@ -26,6 +26,7 @@ export default defineConfig([
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-namespace": "off",
+      "no-unused-private-class-members": "off",
     }
   },
 ]);

@@ -9,7 +9,6 @@ Minecraft bots that can do some of your routine work for you.
 
 - NodeJS v22 (or greater)
 - Shell/Bash scripts support
-- (Optional) PowerShell
 
 
 
@@ -25,11 +24,11 @@ AI: Defense & Avoidance | ❌ Not done
 AI: Attacking & PVP/PVE | ❌ Not done
 Fault tolerance, user-friendly error reporting | ❌ Not done
 Multiple bots management | ❌ Not done
-Bedrock servers support | ❌ Not done
-(prod) `minecraft-data` version management | ❌ Not done
+(prod) `minecraft-data` version management | ⏳ In progress
 (prod) Auto-updating | ❌ Not done
 Http-API | ❌ Not done
 GUI application | ❌ Not done
+Bedrock servers support | ❌ Not done
 
 
 

@@ -9,7 +9,7 @@ const inputFile = "./node_modules/minecraft-data/data.js";
 const outputFile = "./dist/mcdata-real-index.cjs";
 
 const oldStorePath = "minecraft-data/data/";
-const newStorePath = "game-versions/";
+const newStorePath = "repository/game-versions/";
 
 let text = fs.readFileSync(inputFile).toString("utf8");
 text = text.replaceAll(oldStorePath, newStorePath)
