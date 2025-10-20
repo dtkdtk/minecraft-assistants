@@ -4,13 +4,16 @@ import tsEslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 import { includeIgnoreFile } from "@eslint/compat";
 import { fileURLToPath } from "node:url";
+import { join as pathJoin } from "node:path";
 
 const jsExt = "{js,mjs,cjs,ts,mts,cts}";
-const filePatterns = ["src/**/*." + jsExt];
-const ignoredPatterns = ["test/**/*." + jsExt];
+const filePatterns = ["./src/**/*." + jsExt];
+const ignoredPatterns = ["./test/**/*"];
+
+const gitIgnorePath = pathJoin(fileURLToPath(import.meta.url), "../", ".gitignore");
 
 export default defineConfig([
-  includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
+  includeIgnoreFile(gitIgnorePath),
   ...tsEslint.configs.recommended,
   {
     files: filePatterns,

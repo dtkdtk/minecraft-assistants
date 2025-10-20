@@ -2,7 +2,7 @@
 /build/
 /SANDBOX.*
 __PRIVATE__
-/test/pen-test/test_bot_cfg.js
+/test/pen_test/test_bot_cfg.js
 /test/*/data/
 
 # Logs
