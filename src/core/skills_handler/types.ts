@@ -67,7 +67,7 @@ export interface SkillEnvironment {
 
 /** All bot skill classes must implement this interface. */
 export interface IMcaSkill {
-  __WIP__: never;
+  readonly moduleName?: string;
 }
 export type SkillConstructor = (new (brain: Brain) => IMcaSkill);
 
@@ -82,20 +82,20 @@ export interface BotSkillMetadata {
 }
 
 
-export enum SkillIntent {
+export type SkillIntent =
   /**
    * Basic Node modules:
    * - `node:util`
    * - `node:util/types`
    */
-  ImportBasicNodeModules = "ImportBasicNodeModules",
+  | "ImportBasicNodeModules"
   /**
    * System Node modules:
    * - `node:process`
    * - `node:fs`
    */
-  ImportSystemNodeModules = "ImportSystemNodeModules",
-}
+  | "ImportSystemNodeModules"
+;
 
 export type SkillApiVersion = 100;
 

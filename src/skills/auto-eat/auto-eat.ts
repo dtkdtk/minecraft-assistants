@@ -1,7 +1,24 @@
-import mcdata from "minecraft-data";
-import { type Item } from "prismarine-item";
-import { type IMcaSkill, Durat, JobPriority, type JobUnit } from "../core/index.js";
-import type Brain from "../core/brain.js";
+import type * as ty from "../../core/skills_handler/skill_globals.d.ts";
+import type { Item } from "prismarine-item";
+declare const mcaEnv: ty.SkillEnvironment;
+declare const process: never;
+declare const console: never;
+declare const require: never;
+
+await mcaEnv.defineSkill({
+  apiVersion: 100,
+  version: [1,0,0],
+  nameId: "auto-eat",
+  displayName: "AutoEat",
+  authorId: "org.mcadev.dtkdtk",
+  displayAuthor: "Dtk",
+  description: "Automatically eats food from inventory when the assistant is hungry.",
+  intents: [],
+});
+
+
+const mcdata = await mcaEnv.require("minecraft-data");
+const { Durat, JobPriority } = await mcaEnv.require("core");
 
 const MODULE_NAME = "Mod_Eat";
 
@@ -13,12 +30,12 @@ const EXTREME_SATURATION = 6;
 const BANNED_FOOD = ["rotten_flesh", "pufferfish", "chorus_fruit", "poisonous_potato", "spider_eye"];
 const kJobEat = Symbol("job:eat");
 
-export default class Mod_Eat implements IMcaSkill {
+class Mod_Eat implements ty.IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined;
   private _lastHungryMessage: number = 0;
 
-  constructor(private readonly B: Brain) {}
+  constructor(private readonly B: ty.Brain) {}
 
   onGame(): Promise<void> | void {
     this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
@@ -100,12 +117,12 @@ export default class Mod_Eat implements IMcaSkill {
 
 
 
-class Job_EatFood implements JobUnit {
+class Job_EatFood implements ty.JobUnit {
   jobIdentifier: symbol | null;
   jobDisplayName: string;
   createdAt: number;
   promisePause?: Promise<void> | undefined;
-  priority: JobPriority;
+  priority: ty.JobPriority;
   validate? (): Promise<boolean>;
   prepare? (): Promise<boolean>;
   execute: () => Promise<boolean>;
@@ -120,3 +137,6 @@ class Job_EatFood implements JobUnit {
     this.execute = async () => await M.whenHungry(M.checkSaturation() == 2, () => this.promisePause);
   }
 }
+
+
+mcaEnv.loadSkill(Mod_Eat);

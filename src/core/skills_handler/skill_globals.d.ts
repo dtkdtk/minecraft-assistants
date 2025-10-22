@@ -5,12 +5,8 @@ import type { SkillEnvironment } from "./skill_env.ts";
 
 export type * from "../index.ts";
 
-
 declare global {
-  export const mcaEnv: readonly SkillEnvironment;
-  export const process: never;
-  export const console: never;
-  export const require: never;
+  export const mcaEnv: SkillEnvironment;
 }
 
 export {}

@@ -85,11 +85,11 @@ export class SkillEnvironmentExemplar implements SkillEnvironment {
       return this.#requireProvider.require(moduleName);
     }
     else if (moduleName in VirtualBasicNodeImports) {
-      this.#assertIntentRequested(SkillIntent.ImportBasicNodeModules);
+      this.#assertIntentRequested("ImportBasicNodeModules");
       return this.#requireProvider.require(moduleName);
     }
     else if (moduleName in VirtualSystemNodeImports) {
-      this.#assertIntentRequested(SkillIntent.ImportSystemNodeModules);
+      this.#assertIntentRequested("ImportSystemNodeModules");
       return this.#requireProvider.require(moduleName);
     }
     else throw new ModuleNotFoundError(moduleName);

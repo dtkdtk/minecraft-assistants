@@ -77,10 +77,15 @@ export class SkillsHandler {
       try { skillCode = libFs.readFileSync(skillPath, "utf-8") }
       catch (error: unknown) { this.#reportError(error, skillFileName, "file reading"); return pReturn(false) }
 
+      skillCode = `(async () => {;${skillCode};})()`;
+
       const mcaEnv = new SkillEnvironmentExemplar(this.#brain, this, skillPath, kFriendKey_SkillsHandler);
-      const vmContext = libVm.createContext(this.#createVmContext(mcaEnv));
-      const vmScript = new libVm.Script(skillCode, { filename: skillFileName });
-      try { vmScript.runInContext(vmContext) }
+      let vmScript;
+      try {
+        const vmContext = libVm.createContext(this.#createVmContext(mcaEnv));
+        vmScript = new libVm.Script(skillCode, { filename: skillFileName });
+        vmScript.runInContext(vmContext)
+      }
       catch (error: unknown) { this.#reportError(error, skillFileName, "script invocation"); return pReturn(false) }
       
       this.#sandboxes.set(skillPath, vmScript);

@@ -1,0 +1,16 @@
+{
+  "extends": "../base_tsconfig_options.json",
+  "include": [
+    "./core/**/*.ts",
+  ],
+  "exclude": [
+    "./node_modules/**/*",
+    "dist/**/*",
+    "__PRIVATE__/**/*",
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "rootDir": "./"
+  }
+}

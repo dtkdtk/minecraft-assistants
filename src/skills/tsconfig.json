@@ -1,0 +1,21 @@
+{
+  "extends": "../base_tsconfig_options.json",
+  "include": [
+    "./skills/**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules/**/*",
+    "dist/**/*",
+    "__PRIVATE__/**/*",
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    
+    "rootDir": "./",
+
+    "module": "preserve",
+    "resolveJsonModule": false,
+    "moduleResolution": "bundler",
+  }
+}
