@@ -1,0 +1,14 @@
+{
+  "name": "mca-skills-collection",
+  "version": "1.0.0",
+  "description": "An official skills collection for minecraft-assistants",
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx tsc --watch"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

@@ -4,10 +4,9 @@ import * as libVm from "vm"; //Unsecure!
 import { debugLog, InvalidManifestError, SkillIntent, type BotSkillMetadata, type Brain, type SkillEnvironment } from "../index.js";
 import { SkillEnvironmentExemplar } from "./skill_env.js";
 
-const kFriendKey_SkillsHandler = Symbol("friendKey_SkillsHandler");
 
 export class SkillsHandler {
-  #friendKey_Brain: symbol;
+  #rootKey: symbol;
   #brain: Brain;
   #skillsDir?: libFs.Dir;
   /** Format: `"full_filepath" => sandbox` */
@@ -15,17 +14,18 @@ export class SkillsHandler {
   /** Format: `"full_filepath" => mcaEnv` */
   #environments = new Map<string, SkillEnvironmentExemplar>();
 
-  constructor(brain: Brain, friendKey_Brain: symbol) {
+  constructor(brain: Brain, rootKey: symbol) {
     this.#brain = brain;
-    this.#friendKey_Brain = friendKey_Brain;
+    this.#rootKey = rootKey;
   }
 
   /**
    * Must be called from `SkillEnvironmentExemplar.loadSkill()`
    * @internal
+   * @throws {...}
    */
   registerSkill(skillData: BotSkillMetadata) {
-    const skills = this.#brain.res["derestrict:skills"](this.#friendKey_Brain);
+    const skills = this.#brain.res["derestrict:skills"](this.#rootKey);
     //TODO: Resolve this case & Ask user
     //TODO: Find suspicious names (almost similar, but only 1-2 characters differ)
     if (this.#brain.res.querySkillManifest({
@@ -33,12 +33,11 @@ export class SkillsHandler {
     }) !== undefined)
       throw new InvalidManifestError(`Skill with authorID '${skillData.manifest.authorId}'`
         + ` and nameID '${skillData.manifest.nameId}' already exists.`);
-    const env = this.#environments.get(skillData.filepath);
-    if (!env) throw new Error(`[INTERNAL] Cannot find environment exemplar for skill '${skillData.id}'`
-      + ` by filepath '${skillData.filepath}'.`);
-    const executeDeferredLoad = env["derestrict:executeDeferredLoad"](kFriendKey_SkillsHandler);
+    if (!this.#environments.has(skillData.filepath))
+      throw new Error(`[INTERNAL] Cannot find environment exemplar for skill '${skillData.id}'`
+        + ` by filepath '${skillData.filepath}'.`);
     skills.set(skillData.id, skillData);
-    executeDeferredLoad();
+    debugLog(`Successfully registered skill: [${skillData.id}]`);
   }
 
   /**
@@ -50,7 +49,7 @@ export class SkillsHandler {
   }
 
   async loadSkillsDirectory() {
-    const skills = this.#brain.res["derestrict:skills"](this.#friendKey_Brain);
+    const skills = this.#brain.res["derestrict:skills"](this.#rootKey);
 
     if (skills.size > 0) skills.clear();
     if (this.#skillsDir) await this.#skillsDir.close();
@@ -67,7 +66,7 @@ export class SkillsHandler {
       const skillPath = joinPath(skillEnt.parentPath, skillEnt.name);
       processingSkills.push(this.#setupSkillSandbox(skillPath, skillEnt.name));
     }
-    
+    if (processingSkills.length == 0) debugLog("No skills to load.");
   }
 
   #setupSkillSandbox(skillPath: string, skillFileName: string): Promise<boolean> {
@@ -79,7 +78,7 @@ export class SkillsHandler {
 
       skillCode = `(async () => {;${skillCode};})()`;
 
-      const mcaEnv = new SkillEnvironmentExemplar(this.#brain, this, skillPath, kFriendKey_SkillsHandler);
+      const mcaEnv = new SkillEnvironmentExemplar(this.#brain, this, skillPath);
       let vmScript;
       try {
         const vmContext = libVm.createContext(this.#createVmContext(mcaEnv));

@@ -3,11 +3,11 @@ import { RestrictedAccessViolation } from "./types.js";
 
 export class ResourceManager {
   /** TODO: document */
-  #friendKey_Brain: symbol;
+  #rootKey: symbol;
   #skills = new Map<string, BotSkillMetadata>();
 
-  constructor(friendKey: symbol) {
-    this.#friendKey_Brain = friendKey;
+  constructor(rootKey: symbol) {
+    this.#rootKey = rootKey;
   }
 
   getSkill(skillId: string) {
@@ -27,8 +27,8 @@ export class ResourceManager {
       if (queryResult) return manifest;
     }
   }
-  ["derestrict:skills"] (friendKey_Brain: symbol) {
-    if (friendKey_Brain !== this.#friendKey_Brain)
+  ["derestrict:skills"] (rootKey: symbol) {
+    if (rootKey !== this.#rootKey)
       throw new RestrictedAccessViolation(ResourceManager.name, "#skills");
     else return this.#skills;
   }

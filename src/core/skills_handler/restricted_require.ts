@@ -1,4 +1,3 @@
-
 /* Import paths must be statically known */
 
 /** Format: `"virtual_path" => lazy async import(real_path)` */

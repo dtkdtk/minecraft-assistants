@@ -11,6 +11,7 @@
     "removeComments": true,
     "module": "NodeNext",
     "moduleResolution": "nodenext",
-    "lib": ["ESNext"]
+    "lib": ["ESNext"],
+    "target": "es2020"
   }
 }

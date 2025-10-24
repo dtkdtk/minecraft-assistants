@@ -16,6 +16,7 @@ npx tsc
 node ./scripts/generate-compressed-mcdata.js
 node ./scripts/generate-mcdata-index-patch.js
 node ./scripts/generate-mcversions-table.js
+node ./scripts/build-skills.js
 
 #Little patch
 cp ./node_modules/minecraft-data/data.js ./build/~original--mcdata-index.js #Save origin

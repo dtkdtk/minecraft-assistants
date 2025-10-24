@@ -1,4 +1,4 @@
-import { Bot } from "mineflayer";
+import { Bot, BotEvents } from "mineflayer";
 import { SkillsHandler } from "./skills_handler/handler.js";
 import {
   type AnyFunction,
@@ -14,7 +14,7 @@ import {
 import { ResourceManager } from "./resource_manager.js";
 
 const kSubjobExecutionStarted = Symbol("executionStarted");
-const kBrainFriendKey = Symbol("friendKey_Brain");
+
 
 export class Brain extends TypedEventEmitter<BrainEventsMap> {
   isBotSpawned = false;
@@ -24,17 +24,20 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
   bot: Bot;
   configuration: CompletedGeneralBotOptions;
   #skillsHandler: SkillsHandler;
+  #rootKey: symbol;
 
-  constructor(bot: Bot, configuration: CompletedGeneralBotOptions) {
+  constructor(bot: Bot, configuration: CompletedGeneralBotOptions, rootKey: symbol) {
     super();
+    this.#rootKey = rootKey;
     this.bot = bot;
     this.configuration = configuration;
     bot.once("spawn", () => { this.isBotSpawned = true });
+    bot.once("spawn", (...args) => this.listeners("botSpawn").forEach(fn => fn(...args)));
     process.once("SIGINT", async () => await this.exitProcess());
     process.once("exit", wrongExitCallback);
 
-    this.res = new ResourceManager(kBrainFriendKey);
-    this.#skillsHandler = new SkillsHandler(this, kBrainFriendKey);
+    this.res = new ResourceManager(rootKey);
+    this.#skillsHandler = new SkillsHandler(this, rootKey);
 
     this.#skillsHandler.loadSkillsDirectory();
   }
@@ -120,11 +123,11 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
       /* Firstly, execute the aggregate's methods. Then, start sub-jobs execution. */
       if (kSubjobExecutionStarted in currentJob && currentJob[kSubjobExecutionStarted] == true)
         invocationResult = await this.#invokeJob(JU)
-          .catch(error => this.#handleJobInvocationError(error))
+          .catch(error => (this.#handleJobInvocationError(error), false))
           .then(() => currentJob[kSubjobExecutionStarted] = true);
       else
         invocationResult = await this.#invokeJob(currentJob)
-          .catch(error => this.#handleJobInvocationError(error));
+          .catch(error => (this.#handleJobInvocationError(error), false));
       
       if (!stopped) {
         if (invocationResult === true || (invocationResult === false && !JU.reExecuteAfterFail))
@@ -202,6 +205,7 @@ function wrongExitCallback() {
 }
 
 interface BrainEventsMap {
+  botSpawn: BotEvents["spawn"];
   newWarning(message: string): any;
 }
 

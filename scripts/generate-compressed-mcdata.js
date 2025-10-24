@@ -3,13 +3,13 @@ import * as fs from "fs";
 import * as libPath from "path";
 import * as zlib from "zlib";
 import { promisify } from "util";
+import assert from "assert";
 
 /* Only JSON files are being compressed, because only they are loaded dynamically,
   and YAML files' weight is under 5% of the original minecraft-data weight
   (so they won't be compressed) */
 
-if (process.cwd().split(libPath.sep).at(-1) == "scripts")
-  throw new Error("Process CWD must be project root");
+assert(process.cwd().split(libPath.sep).at(-1) != "scripts", "Process CWD must be project root");
 
 const inputDir = "./node_modules/minecraft-data/minecraft-data/data/";
 const outputDir = "./dist/compressed-mcdata/";

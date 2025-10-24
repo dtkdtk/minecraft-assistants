@@ -10,5 +10,5 @@ export default {
   port: 25565,
   enableDebug: true,
   interactiveCli: true,
-  skillsDirPath: "../../dist/skills"
+  skillsDirPath: "../../dist/skills_flat"
 };

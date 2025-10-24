@@ -29,11 +29,6 @@ export interface SkillEnvironment {
    * @throws {SkillIsNotDefined | MissingIntent}
    */
   require(mod: "core"): Promise<typeof import("../index.js")>;
-  require(mod: "core:auxiliary"): Promise<typeof import("../auxiliary.js")>;
-  require(mod: "core:types"): Promise<typeof import("../types.js")>;
-  require(mod: "core:lib/actqueue"): Promise<typeof import("../lib/actqueue.js")>;
-  require(mod: "core:lib/durat"): Promise<typeof import("../lib/durat.js")>;
-  require(mod: "core:lib/typed_emitter"): Promise<typeof import("../lib/typed_emitter.js")>;
 
   require(mod: "mineflayer"): Promise<typeof import("mineflayer")>;
   require(mod: "mineflayer-pathfinder"): Promise<typeof import("mineflayer-pathfinder")>;
@@ -148,5 +143,5 @@ export function skillId_From(skillMf: SkillManifest): string {
   const author = skillMf.authorId;
   const name = skillMf.nameId;
   const version = skillMf.version;
-  return [author, name, version].join(":");
+  return [author, name, version.join(".")].join(":");
 }

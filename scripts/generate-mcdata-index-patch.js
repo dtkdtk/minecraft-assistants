@@ -1,9 +1,9 @@
 //CWD: project root
 import * as fs from "fs";
 import * as libPath from "path";
+import assert from "assert";
 
-if (process.cwd().split(libPath.sep).at(-1) == "scripts")
-  throw new Error("Process CWD must be project root");
+assert(process.cwd().split(libPath.sep).at(-1) != "scripts", "Process CWD must be project root");
 
 const inputFile = "./node_modules/minecraft-data/data.js";
 const outputFile = "./dist/mcdata-real-index.cjs";

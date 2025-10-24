@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "lint": "npx eslint --cache",
-    "dev": "rm -r ./dist; npx tsc --watch",
+    "dev": "rm -r ./dist; cd ./src/skills; npx tsc; cd ../../; cd ./src/core; npx tsc --watch",
     "build": "sh ./scripts/build.sh"
   },
   "repository": {

@@ -1,0 +1,1 @@
+cd ../../ ; node ./scripts/build-skills.js ; cd -

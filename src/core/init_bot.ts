@@ -12,6 +12,7 @@ const defaultOptions: Required<OptionalBotOptions> = {
   enableDebug: false,
   interactiveCli: false,
 };
+const kRootKey = Symbol("ROOT_KEY");
 
 
 export async function createMinecraftAssistantBot(inputOptions: GeneralBotOptions) {
@@ -23,9 +24,9 @@ export async function createMinecraftAssistantBot(inputOptions: GeneralBotOption
     database.setAutocompactionInterval(options.databaseAutosaveInterval); */
 
   const bot = mf.createBot({ ...options, ...inputOptions._mfClientOptionsOverrides });
+  const brain = new Brain(bot, options, kRootKey);
   bot.once("spawn", () => {
     bot.loadPlugin(pathfinder);
-    const brain = new Brain(bot, options);
     if (inputOptions.interactiveCli) setupCommandLineInterface(brain);
   });
 }

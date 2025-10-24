@@ -1,21 +1,24 @@
 {
-  "extends": "../base_tsconfig_options.json",
+  "extends": "../../base_tsconfig_options.json",
   "include": [
-    "./skills/**/*.ts"
+    "./**/*.ts"
   ],
   "exclude": [
-    "./node_modules/**/*",
-    "dist/**/*",
-    "__PRIVATE__/**/*",
+    "node_modules/",
+    "dist/",
+    "__PRIVATE__/",
   ],
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    
-    "rootDir": "./",
+    "outDir": "../../dist/skills/",
 
     "module": "preserve",
     "resolveJsonModule": false,
     "moduleResolution": "bundler",
+    "paths": {
+      "mca-globals": ["../../dist/core/skills_handler/_skill_globals.d.ts"]
+    },
+    "types": [
+      "../../dist/core/skills_handler/_skill_globals.d.ts"
+    ],
   }
 }

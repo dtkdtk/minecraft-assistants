@@ -1,9 +1,11 @@
-import type * as ty from "../../core/skills_handler/skill_globals.d.ts";
+import type * as ty from "mca-globals";
 import type { Item } from "prismarine-item";
 declare const mcaEnv: ty.SkillEnvironment;
 declare const process: never;
 declare const console: never;
 declare const require: never;
+
+;(async () => {
 
 await mcaEnv.defineSkill({
   apiVersion: 100,
@@ -19,7 +21,6 @@ await mcaEnv.defineSkill({
 
 const mcdata = await mcaEnv.require("minecraft-data");
 const { Durat, JobPriority } = await mcaEnv.require("core");
-
 const MODULE_NAME = "Mod_Eat";
 
 const CHECK_INTERVAL = Durat({ sec: 3 });
@@ -35,7 +36,9 @@ class Mod_Eat implements ty.IMcaSkill {
   private timer: NodeJS.Timeout | undefined;
   private _lastHungryMessage: number = 0;
 
-  constructor(private readonly B: ty.Brain) {}
+  constructor(private readonly B: ty.Brain) {
+    B.once("botSpawn", this.onGame.bind(this));
+  }
 
   onGame(): Promise<void> | void {
     this.timer = setInterval(() => this.update(), CHECK_INTERVAL);
@@ -63,7 +66,7 @@ class Mod_Eat implements ty.IMcaSkill {
     if (jobPromisePause !== undefined && jobPromisePause() !== undefined) return true;
 
     //Maybe we need to eat more?
-    if (this.checkSaturation() != 0) return await this.whenHungry(false);
+    //if (this.checkSaturation() != 0) return await this.whenHungry(false);
     return true;
   }
   activateFoodItem() {
@@ -140,3 +143,5 @@ class Job_EatFood implements ty.JobUnit {
 
 
 mcaEnv.loadSkill(Mod_Eat);
+
+})();
