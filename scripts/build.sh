@@ -12,7 +12,8 @@ mkdir ./build
 mkdir ./build/repository
 mkdir ./build/repository/game-versions
 npm i --no-fund
-npx tsc
+cd ./src/core ; npx tsc ; cd -
+cd ./src/skills ; npx tsc ; cd -
 node ./scripts/generate-compressed-mcdata.js
 node ./scripts/generate-mcdata-index-patch.js
 node ./scripts/generate-mcversions-table.js
@@ -26,7 +27,7 @@ cp ./dist/mcdata-real-index.cjs ./node_modules/minecraft-data/_real-index.js
 #Bundle launcher
 cp -r ./src/launcher/program ./build/
 cp -r ./dist/compressed-mcdata/pc ./build/repository/game-versions/pc
-cp -r ./dist/skills ./build
+cp -r ./dist/skills_flat ./build/skills
 cp ./src/launcher/ReleaseReadme.md ./build/README.md
 cp ./LICENSE ./build/LICENSE
 cp ./package.json ./build/program/package.json
