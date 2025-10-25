@@ -3,34 +3,29 @@ import { type SomeFunction } from "../auxiliary.js";
 /**
  * Action queue. Performs specified actions evenly, at equal time intervals.
  */
-export class ActionQueue
-{
-  private readonly _cooldownMs: number;
-  private readonly _queue: SomeFunction[] = [];
-  private _timeout: NodeJS.Timeout | null = null;
+export class ActionQueue {
+  readonly #cooldownMs: number;
+  readonly #queue: SomeFunction[] = [];
+  #timeout: NodeJS.Timeout | null = null;
 
-  constructor(cooldownMs: number)
-  {
-    this._cooldownMs = cooldownMs;
+  constructor(cooldownMs: number) {
+    this.#cooldownMs = cooldownMs;
   }
 
-  push(action: SomeFunction)
-  {
-    this._queue.push(action);
-    if (this._timeout == null) this._execChainedAction();
+  push(action: SomeFunction) {
+    this.#queue.push(action);
+    if (this.#timeout == null) this.#execChainedAction();
   }
 
-  private _createTimeout()
-  {
-    this._timeout ??= setTimeout(() => {
-      this._timeout = null;
-      this._execChainedAction()
-    }, this._cooldownMs);
+  #createTimeout() {
+    this.#timeout ??= setTimeout(() => {
+      this.#timeout = null;
+      this.#execChainedAction()
+    }, this.#cooldownMs);
   }
-  private _execChainedAction()
-  {
-    if (this._queue.length == 0) return;
-    this._queue.shift()?.();
-    this._createTimeout();
+  #execChainedAction() {
+    if (this.#queue.length == 0) return;
+    this.#queue.shift()?.();
+    this.#createTimeout();
   }
 }

@@ -7,8 +7,7 @@ import type { SkillsHandler } from "./handler.js";
 import { ModuleNotFoundError, RestrictedRequireProvider } from "./restricted_require.js";
 import {
   InvalidManifestError, MissingIntent, type SkillConstructor, type SkillEnvironment,
-  skillId_From,
-  SkillIntent, SkillIsNotDefined, type SkillManifest
+  skillId_From, SkillIntent, SkillIsNotDefined, type SkillManifest
 } from "./types.js";
 
 
@@ -27,13 +26,57 @@ const VirtualTrustedImports: VirtualImportsMapObj = {
 };
 
 const VirtualBasicNodeImports: VirtualImportsMapObj = {
+  "node:buffer": () => import("node:buffer"),
+  "node:constants": () => import("node:constants"),
+  "node:events": () => import("node:events"),
+  "node:path": () => import("node:path"),
+  "node:path/posix": () => import("node:path/posix"),
+  "node:path/win32": () => import("node:path/win32"),
+  "node:querystring": () => import("node:querystring"),
+  "node:stream": () => import("node:stream"),
+  "node:stream/consumers": () => import("node:stream/consumers"),
+  "node:stream/promises": () => import("node:stream/promises"),
+  "node:stream/web": () => import("node:stream/web"),
+  "node:string_decoder": () => import("node:string_decoder"),
+  "node:timers": () => import("node:timers"),
+  "node:timers/promises": () => import("node:timers/promises"),
   "node:util": () => import("node:util"),
   "node:util/types": () => import("node:util/types"),
+  "node:zlib": () => import("node:zlib"),
 };
 
 const VirtualSystemNodeImports: VirtualImportsMapObj = {
+  "node:worker_threads": () => import("node:worker_threads"),
+  "node:vm": () => import("node:vm"),
+  "node:wasi": () => import("node:wasi"),
+  "node:url": () => import("node:url"),
+  "node:tty": () => import("node:tty"),
+  "node:trace_events": () => import("node:trace_events"),
+  "node:tls": () => import("node:tls"),
+  "node:test": () => import("node:test"),
+  "node:test/reporters": () => import("node:test/reporters"),
+  "node:readline": () => import("node:readline"),
+  "node:readline/promises": () => import("node:readline/promises"),
   "node:process": () => import("node:process"),
+  "node:perf_hooks": () => import("node:perf_hooks"),
+  "node:net": () => import("node:net"),
+  "node:os": () => import("node:os"),
+  "node:module": () => import("node:module"),
+  "node:inspector": () => import("node:inspector"),
+  "node:inspector/promises": () => import("node:inspector/promises"),
+  "node:http": () => import("node:http"),
+  "node:http2": () => import("node:http2"),
+  "node:https": () => import("node:https"),
+  "node:dns": () => import("node:dns"),
+  "node:dns/promises": () => import("node:dns/promises"),
+  "node:diagnostics_channel": () => import("node:diagnostics_channel"),
+  "node:crypto": () => import("node:crypto"),
+  "node:dgram": () => import("node:dgram"),
+  "node:child_process": () => import("node:child_process"),
+  "node:cluster": () => import("node:cluster"),
+  "node:console": () => import("node:console"),
   "node:fs": () => import("node:fs"),
+  "node:fs/promises": () => import("node:fs/promises"),
 };
 
 
@@ -85,10 +128,23 @@ export class SkillEnvironmentExemplar implements SkillEnvironment {
       this.#assertIntentRequested("ImportBasicNodeModules");
       return this.#requireProvider.require(moduleName);
     }
-    else if (moduleName in VirtualSystemNodeImports) {
+    else if (moduleName in VirtualSystemNodeImports)
+      throw new WrongImportTypeError(moduleName, "requireRestricted");
+    else throw new ModuleNotFoundError(moduleName);
+  }
+
+  requireRestricted(moduleName: string): Promise<any> {
+    this.#assertSkillDefined();
+    if (moduleName in VirtualSystemNodeImports) {
       this.#assertIntentRequested("ImportSystemNodeModules");
       return this.#requireProvider.require(moduleName);
     }
+    else if (moduleName in VirtualBasicNodeImports)
+      throw new WrongImportTypeError(moduleName, "require");
+    else if (moduleName in VirtualCoreImports)
+      throw new WrongImportTypeError(moduleName, "require");
+    else if (moduleName in VirtualTrustedImports)
+      throw new WrongImportTypeError(moduleName, "require");
     else throw new ModuleNotFoundError(moduleName);
   }
 
@@ -135,6 +191,13 @@ export class SkillEnvironmentExemplar implements SkillEnvironment {
   #checkIntent(intent: SkillIntent): boolean {
     this.#assertSkillDefined();
     return this.#skillManifest?.intents?.includes(intent) ?? false;
+  }
+}
+
+
+export class WrongImportTypeError extends Error {
+  constructor(public virtualPath: string, public neededMethod: string) {
+    super(`Module '${virtualPath}' (virtual path) must be imported by the [mcaEnv.${neededMethod}()] method.`);
   }
 }
 

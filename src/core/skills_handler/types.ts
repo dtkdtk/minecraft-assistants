@@ -36,8 +36,62 @@ export interface SkillEnvironment {
   require(mod: "prismarine-item"): Promise<typeof import("prismarine-item")>;
   require(mod: "vec3"): Promise<typeof import("vec3")>;
 
+  require(mod: "node:buffer"): Promise<typeof import("node:buffer")>;
+  require(mod: "node:constants"): Promise<typeof import("node:constants")>;
+  require(mod: "node:events"): Promise<typeof import("node:events")>;
+  require(mod: "node:path"): Promise<typeof import("node:path")>;
+  require(mod: "node:path/posix"): Promise<typeof import("node:path/posix")>;
+  require(mod: "node:path/win32"): Promise<typeof import("node:path/win32")>;
+  require(mod: "node:querystring"): Promise<typeof import("node:querystring")>;
+  require(mod: "node:stream"): Promise<typeof import("node:stream")>;
+  require(mod: "node:stream/consumers"): Promise<typeof import("node:stream/consumers")>;
+  require(mod: "node:stream/promises"): Promise<typeof import("node:stream/promises")>;
+  require(mod: "node:stream/web"): Promise<typeof import("node:stream/web")>;
+  require(mod: "node:string_decoder"): Promise<typeof import("node:string_decoder")>;
+  require(mod: "node:timers"): Promise<typeof import("node:timers")>;
+  require(mod: "node:timers/promises"): Promise<typeof import("node:timers/promises")>;
   require(mod: "node:util"): Promise<typeof import("node:util")>;
   require(mod: "node:util/types"): Promise<typeof import("node:util/types")>;
+  require(mod: "node:zlib"): Promise<typeof import("node:zlib")>;
+
+  /**
+   * Import restricted Node module.
+   * You must require `ImportSystemNodeModules` intent in the Manifest.
+   * 
+   * This is a specialization of the {@link SkillEnvironment.require()}.
+   * @throws {SkillIsNotDefined | MissingIntent}
+   */
+  requireRestricted(mod: "node:console"): Promise<typeof import("node:console")>;
+  requireRestricted(mod: "node:fs"): Promise<typeof import("node:fs")>;
+  requireRestricted(mod: "node:fs/promises"): Promise<typeof import("node:fs/promises")>;
+  requireRestricted(mod: "node:worker_threads"): Promise<typeof import("node:worker_threads")>;
+  requireRestricted(mod: "node:vm"): Promise<typeof import("node:vm")>;
+  requireRestricted(mod: "node:wasi"): Promise<typeof import("node:wasi")>;
+  requireRestricted(mod: "node:url"): Promise<typeof import("node:url")>;
+  requireRestricted(mod: "node:tty"): Promise<typeof import("node:tty")>;
+  requireRestricted(mod: "node:trace_events"): Promise<typeof import("node:trace_events")>;
+  requireRestricted(mod: "node:tls"): Promise<typeof import("node:tls")>;
+  requireRestricted(mod: "node:test"): Promise<typeof import("node:test")>;
+  requireRestricted(mod: "node:test/reporters"): Promise<typeof import("node:test/reporters")>;
+  requireRestricted(mod: "node:readline"): Promise<typeof import("node:readline")>;
+  requireRestricted(mod: "node:readline/promises"): Promise<typeof import("node:readline/promises")>;
+  requireRestricted(mod: "node:process"): Promise<typeof import("node:process")>;
+  requireRestricted(mod: "node:perf_hooks"): Promise<typeof import("node:perf_hooks")>;
+  requireRestricted(mod: "node:net"): Promise<typeof import("node:net")>;
+  requireRestricted(mod: "node:os"): Promise<typeof import("node:os")>;
+  requireRestricted(mod: "node:module"): Promise<typeof import("node:module")>;
+  requireRestricted(mod: "node:inspector"): Promise<typeof import("node:inspector")>;
+  requireRestricted(mod: "node:inspector/promises"): Promise<typeof import("node:inspector/promises")>;
+  requireRestricted(mod: "node:http"): Promise<typeof import("node:http")>;
+  requireRestricted(mod: "node:http2"): Promise<typeof import("node:http2")>;
+  requireRestricted(mod: "node:https"): Promise<typeof import("node:https")>;
+  requireRestricted(mod: "node:dns"): Promise<typeof import("node:dns")>;
+  requireRestricted(mod: "node:dns/promises"): Promise<typeof import("node:dns/promises")>;
+  requireRestricted(mod: "node:diagnostics_channel"): Promise<typeof import("node:diagnostics_channel")>;
+  requireRestricted(mod: "node:crypto"): Promise<typeof import("node:crypto")>;
+  requireRestricted(mod: "node:dgram"): Promise<typeof import("node:dgram")>;
+  requireRestricted(mod: "node:child_process"): Promise<typeof import("node:child_process")>;
+  requireRestricted(mod: "node:cluster"): Promise<typeof import("node:cluster")>;
 
   /**
    * Define skill and allow to perform next actions.
@@ -129,7 +183,7 @@ export class SkillError extends Error {
 
 export class MissingIntent extends SkillError {
   constructor(public intent: SkillIntent) {
-    super("Skill does not requested intent [" + intent + "], but used it.");
+    super(`Skill does not requested intent [${intent}], but used it.`);
   }
 }
 

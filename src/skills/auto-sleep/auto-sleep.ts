@@ -34,7 +34,7 @@ const kJobSleep = Symbol("job:sleep");
 
 class Mod_Sleep implements ty.IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
-  private timer: NodeJS.Timeout | undefined
+  timer: NodeJS.Timeout | undefined
   
   constructor(private readonly B: ty.Brain) {
     B.once("botSpawn", this.onGame.bind(this));

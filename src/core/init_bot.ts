@@ -1,7 +1,7 @@
 import { default as Nedb } from "@seald-io/nedb";
 import * as mf from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
-import { join as joinPath } from "path";
+import { join as joinPath } from "node:path";
 import { setupCommandLineInterface } from "./control_panel/terminal_app.js";
 import {
   Brain, DB, debugLog, Durat, type CompletedGeneralBotOptions,

@@ -1,5 +1,5 @@
-import * as libFs from "fs";
-import { join as joinPath } from "path";
+import * as libFs from "node:fs";
+import { join as joinPath } from "node:path";
 import * as libVm from "vm"; //Unsecure!
 import { debugLog, InvalidManifestError, SkillIntent, type BotSkillMetadata, type Brain, type SkillEnvironment } from "../index.js";
 import { SkillEnvironmentExemplar } from "./skill_env.js";

@@ -33,8 +33,8 @@ const kJobEat = Symbol("job:eat");
 
 class Mod_Eat implements ty.IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
-  private timer: NodeJS.Timeout | undefined;
-  private _lastHungryMessage: number = 0;
+  timer: NodeJS.Timeout | undefined;
+  lastHungryMessage: number = 0;
 
   constructor(private readonly B: ty.Brain) {
     B.once("botSpawn", this.onGame.bind(this));
@@ -51,8 +51,8 @@ class Mod_Eat implements ty.IMcaSkill {
     const food = this.findFood();
     if (!food) {
       //TODO: go look for food
-      if (this._lastHungryMessage + Durat({ min: 3 }) < Date.now()) {
-        this._lastHungryMessage = Date.now();
+      if (this.lastHungryMessage + Durat({ min: 3 }) < Date.now()) {
+        this.lastHungryMessage = Date.now();
         this.B.bot.chat((extreme ? "I AM VERY HUNGRY!!!" : "I am hungry!!") + ` saturation: ${this.B.bot.food}`);
       }
       return false;
