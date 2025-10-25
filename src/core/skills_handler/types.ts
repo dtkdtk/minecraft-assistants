@@ -34,6 +34,7 @@ export interface SkillEnvironment {
   require(mod: "mineflayer-pathfinder"): Promise<typeof import("mineflayer-pathfinder")>;
   require(mod: "minecraft-data"): Promise<typeof import("minecraft-data")>;
   require(mod: "prismarine-item"): Promise<typeof import("prismarine-item")>;
+  require(mod: "vec3"): Promise<typeof import("vec3")>;
 
   require(mod: "node:util"): Promise<typeof import("node:util")>;
   require(mod: "node:util/types"): Promise<typeof import("node:util/types")>;

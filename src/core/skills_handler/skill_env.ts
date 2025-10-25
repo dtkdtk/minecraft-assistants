@@ -23,6 +23,7 @@ const VirtualTrustedImports: VirtualImportsMapObj = {
   "mineflayer-pathfinder": () => import("mineflayer-pathfinder"),
   "minecraft-data": () => import("minecraft-data").then(D => D.default),
   "prismarine-item": () => import("prismarine-item"),
+  "vec3": () => import("vec3"),
 };
 
 const VirtualBasicNodeImports: VirtualImportsMapObj = {

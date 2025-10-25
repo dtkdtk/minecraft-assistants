@@ -1,9 +1,26 @@
-import assert from "assert";
-import _mfPathfinder from "mineflayer-pathfinder";
-import { Vec3 } from "vec3";
-import type Brain from "../core/brain.js";
-import { type IMcaSkill, DB, debugLog, Durat, JobPriority, type LocationPoint, LocationType, stringifyCoordinates } from "../core/index.js";
-const { Movements, goals } = _mfPathfinder;
+import type * as ty from "mca-globals";
+declare const mcaEnv: ty.SkillEnvironment;
+declare const process: never;
+declare const console: never;
+declare const require: never;
+
+;(async () => {
+
+await mcaEnv.defineSkill({
+  apiVersion: 100,
+  version: [1,0,0],
+  nameId: "auto-sleep",
+  displayName: "AutoSleep",
+  authorId: "org.mcadev.dtkdtk",
+  displayAuthor: "Dtk",
+  description: "Automatically goes to sleep to the nearest / specified bed at the night.",
+  intents: [],
+});
+
+const assert = (cond: unknown, msg?: string) => { if (cond) throw new Error("Assertion failed. " + (msg ?? "")) }
+const { debugLog, stringifyCoordinates, Durat, JobPriority, DB, LocationType } = await mcaEnv.require("core");
+const { Vec3 } = await mcaEnv.require("vec3");
+const { Movements, goals } = await mcaEnv.require("mineflayer-pathfinder");
 
 const MODULE_NAME = "Mod_Sleep";
 
@@ -15,11 +32,11 @@ const kJobSleep = Symbol("job:sleep");
 
 /* TODO: Approximation of travel time; advance movement */
 
-export default class Mod_Sleep implements IMcaSkill {
+class Mod_Sleep implements ty.IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined
   
-  constructor(private readonly B: Brain) {}
+  constructor(private readonly B: ty.Brain) {}
   
   async onGame() {
     await this.loadDatabaseDefaults();
@@ -82,7 +99,7 @@ export default class Mod_Sleep implements IMcaSkill {
     return true;
   }
   
-  async getBedLocation(): Promise<LocationPoint | null> {
+  async getBedLocation(): Promise<ty.LocationPoint | null> {
     const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
     assert(locationsStore !== null);
     const bedPoint = locationsStore.locations.find(loc => loc.key == kLocationBed);
@@ -104,3 +121,7 @@ export default class Mod_Sleep implements IMcaSkill {
       x: -185, y: 63, z: 412 }] });
   }
 }
+
+mcaEnv.loadSkill(Mod_Sleep);
+
+})();
