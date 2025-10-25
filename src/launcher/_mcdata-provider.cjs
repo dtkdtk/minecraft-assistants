@@ -11,7 +11,7 @@
 const {readFileSync} = require("fs");
 const {gunzipSync} = require("zlib");
 
-
+//TODO: Caching
 function importVersionData(path) {
   try {
     const dataRaw = readFileSync(path);

@@ -12,8 +12,8 @@ mkdir ./build
 mkdir ./build/repository
 mkdir ./build/repository/game-versions
 npm i --no-fund
-cd ./src/core ; npx tsc ; cd -
-cd ./src/skills ; npx tsc ; cd -
+cd ./src/core ; npx tsc ; cd - >/dev/null
+cd ./src/skills ; npx tsc ; cd - >/dev/null
 node ./scripts/generate-compressed-mcdata.js
 node ./scripts/generate-mcdata-index-patch.js
 node ./scripts/generate-mcversions-table.js
