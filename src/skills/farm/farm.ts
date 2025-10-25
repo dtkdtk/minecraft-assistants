@@ -1,11 +1,33 @@
-import { Item } from "prismarine-item";
-import _mfPathfinder from "mineflayer-pathfinder";
-import { Vec3 } from "vec3";
-// import assert from "assert"; // Don't delete !  It's for functions like get***Location()  // ***DO NOT FORGET TO UNCOMMENT ALL COMMENTED USES OF COORDINATES !!!!!!!!!!!!!***
-import { debugLog, Durat, JobPriority, AggregateJob, JobUnit, type LocationPoint, type LocationRegion, LocationType, stringifyCoordinates } from "../../index.js";
-import type Brain from "../brain.js";
-import { Block } from "prismarine-block";
-const { Movements, goals } = _mfPathfinder;
+// ***DO NOT FORGET TO UNCOMMENT ALL COMMENTED USES OF COORDINATES !!!!!!!!!!!!!***
+import type * as ty from "mca-globals";
+declare const mcaEnv: ty.SkillEnvironment;
+declare const process: never;
+declare const console: never;
+declare const require: never;
+
+import type { Item } from "prismarine-item";
+// import assert from "assert"; // Don't delete !  It's for functions like get***Location()  
+import type { Block } from "prismarine-block";
+import type { Vec3 } from "vec3";
+
+
+
+;(async () => {
+
+await mcaEnv.defineSkill({
+  apiVersion: 100,
+  version: [0,1,0],
+  nameId: "farm",
+  displayName: "Farm",
+  authorId: "org.mcadev.valinok",
+  displayAuthor: "Valinok",
+  description: "Go work on farm!",
+  intents: [],
+});
+
+const { debugLog, Durat, JobPriority, LocationType, stringifyCoordinates } = await mcaEnv.require("core");
+const { Movements, goals } = await mcaEnv.require("mineflayer-pathfinder");
+const { Vec3 } = await mcaEnv.require("vec3");
 
 const MODULE_NAME = "Mod_Farm"
 
@@ -17,13 +39,12 @@ const DIRT_BLOCKS = ["farmland", "dirt", "grass_block"];
 const WATER_BLOCKS = ["water", "kelp", "seagrass"];
 const CONTAINERS = ['chest', 'dispenser', 'ender_chest', 'shulker_box', 'hopper', 'container', 'dropper', 'trapped_chest', 'barrel', 'white_shulker_box', 'orange_shulker_box', 'magenta_shulker_box', 'light_blue_shulker_box', 'yellow_shulker_box', 'lime_shulker_box', 'pink_shulker_box', 'gray_shulker_box', 'light_gray_shulker_box', 'cyan_shulker_box', 'purple_shulker_box', 'blue_shulker_box', 'brown_shulker_box', 'green_shulker_box', 'red_shulker_box', 'black_shulker_box'];
 
-const kLocationContainer = CONTAINERS;
 const kJobFarming = Symbol("job:farm");
 
 type MatrixCell = Vec3 | null;    //  [ X, Y, Z ] | null
 type DynamicMatrix = MatrixCell[][];
 
-const containerPoint: LocationPoint = {
+const containerPoint: ty.LocationPoint = {
   key: "chestPoint",
   type: LocationType.Point,
   
@@ -32,7 +53,7 @@ const containerPoint: LocationPoint = {
   z: 25,
 }
 
-const fieldLocation: LocationRegion = {
+const fieldLocation: ty.LocationRegion = {
   key: "fieldLocation",
   type: LocationType.Region,
 
@@ -45,9 +66,10 @@ const fieldLocation: LocationRegion = {
   z2: 19,
 }
 
-export default class Mod_Farm {
+class Mod_Farm implements ty.IMcaSkill {
+  readonly moduleName = MODULE_NAME;
   
-  constructor(private readonly B: Brain) {
+  constructor(private readonly B: ty.Brain) {
     this.update();
   }
 
@@ -64,7 +86,7 @@ export default class Mod_Farm {
    * @param range Радиус, в котором цель считается достигнутой. По умолчанию 0 (бот идёт строго на координаты).
    * @returns `true` если цель достигнута; `false` если нет.
    */
-  async goToPoint( botGoal: LocationPoint | Vec3, pointDisplayName?: string, range?: number ): Promise<boolean> {
+  async goToPoint( botGoal: ty.LocationPoint | Vec3, pointDisplayName?: string, range?: number ): Promise<boolean> {
     if (!pointDisplayName) pointDisplayName = "point";
 
     // Didn't the bot already gone to the point?
@@ -204,7 +226,7 @@ export default class Mod_Farm {
     return true;
   }
 
-  async getContainerLocation(): Promise<LocationPoint | null> {
+  async getContainerLocation(): Promise<ty.LocationPoint | null> {
     // const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
     // assert(locationsStore !== null);
     // const containerPoint = locationsStore.locations.find(loc => kLocationContainer.includes(loc.key));
@@ -265,7 +287,7 @@ export default class Mod_Farm {
     return true;
   }
 
-  async getFieldLocation(): Promise<LocationRegion | null> {
+  async getFieldLocation(): Promise<ty.LocationRegion | null> {
     // const locationsStore = await DB.locations.findOneAsync({ _id: MODULE_NAME });
     // assert(locationsStore !== null);
     // const fieldLocation = locationsStore.locations.find(loc => loc.key == kLocationField);
@@ -282,7 +304,7 @@ export default class Mod_Farm {
   }
   
   // this will be used later
-  getNearestFieldCorner(): boolean | LocationPoint {
+  getNearestFieldCorner(): boolean | ty.LocationPoint {
     // const fieldLocation = await this.getFieldLocation;
     if (fieldLocation == null) { 
       this.B.warn(`[${MODULE_NAME}] Can't find field location.`);
@@ -310,7 +332,7 @@ export default class Mod_Farm {
       debugLog(`I'm already at the field`);
       return true;
     }
-    const returnCorner: LocationPoint = {
+    const returnCorner: ty.LocationPoint = {
       key: "targetFieldCorner",
       type: LocationType.Point,
       x: closestCorner.x,
@@ -514,9 +536,9 @@ export default class Mod_Farm {
     return false;
   }
 
-  jobs: JobUnit[] = [];
+  jobs: ty.JobUnit[] = [];
 
-  async createJobsQueue(jobs: JobUnit[]): Promise<boolean> {
+  async createJobsQueue(jobs: ty.JobUnit[]): Promise<boolean> {
     let isForward = true;
     for (const row of this._fieldMatrix) {
       const start = isForward ? 0 : row.length - 1;
@@ -543,13 +565,13 @@ export default class Mod_Farm {
   // #endregion
 }
 
-class Job_Farming implements AggregateJob {
+class Job_Farming implements ty.AggregateJob {
   jobIdentifier: symbol | null;
   jobDisplayName: string;
   createdAt: number;
-  priority: JobPriority;
+  priority: ty.JobPriority;
   cursor: number;
-  jobs: JobUnit[];
+  jobs: ty.JobUnit[];
   promisePause?: Promise<void> | undefined;
   reExecuteAfterFail?: boolean | undefined;
   prepare? (): Promise<boolean>;
@@ -571,11 +593,11 @@ class Job_Farming implements AggregateJob {
   }
 }
 
-class Farm_Block implements JobUnit {
+class Farm_Block implements ty.JobUnit {
   jobIdentifier: symbol | null;
   jobDisplayName: string;
   createdAt: number;
-  priority: JobPriority;
+  priority: ty.JobPriority;
   prepare?(): Promise<boolean>;
   execute: () => Promise<boolean>;
   failure?(): Promise<void>;
@@ -589,3 +611,7 @@ class Farm_Block implements JobUnit {
     this.execute = async () => await M.processBlock(Block);
   }
 }
+
+mcaEnv.loadSkill(Mod_Farm);
+
+})();
