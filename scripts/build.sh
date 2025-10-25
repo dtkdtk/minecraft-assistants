@@ -28,7 +28,7 @@ cp ./dist/mcdata-real-index.cjs ./node_modules/minecraft-data/_real-index.js
 cp -r ./src/launcher/program ./build/
 cp -r ./dist/compressed-mcdata/pc ./build/repository/game-versions/pc
 cp -r ./dist/skills_flat ./build/skills
-cp ./src/launcher/ReleaseReadme.md ./build/README.md
+cp ./Release_README.md ./build/README.md
 cp ./LICENSE ./build/LICENSE
 cp ./package.json ./build/program/package.json
 cp ./dist/mcversions-index.json ./build/program/

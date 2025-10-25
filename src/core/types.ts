@@ -34,8 +34,12 @@ export interface GeneralBotOptions extends _NecessaryBotOptions {
    * @default false
    */
   interactiveCli?: boolean;
+  /**
+   * Server game version. Used in game data pre-loading.
+   */
+  gameVersion?: string;
 }
-type _CleanBotOptions = Omit<GeneralBotOptions, keyof _NecessaryBotOptions | "_mfClientOptionsOverrides">;
+type _CleanBotOptions = Omit<GeneralBotOptions, keyof _NecessaryBotOptions | "_mfClientOptionsOverrides" | "gameVersion">;
 export type OptionalBotOptions = { [key in keyof _CleanBotOptions]: NonNullable<_CleanBotOptions[key]> };
 export type CompletedGeneralBotOptions = GeneralBotOptions & Required<OptionalBotOptions>;
 

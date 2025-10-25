@@ -158,6 +158,10 @@ const CONFIGURATION_ADAPTION_MAP = {
       let V = cfg.General.enable_debug;
       return V;
     },
+    gameVersion: (cfg, botKey) => {
+      let V = cfg[botKey].game_version;
+      return V;
+    },
   }),
 };
 

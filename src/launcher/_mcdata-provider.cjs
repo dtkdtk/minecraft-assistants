@@ -11,18 +11,21 @@
 const {readFileSync} = require("fs");
 const {gunzipSync} = require("zlib");
 
-//TODO: Caching
+
 function importVersionData(path) {
+  if (importVersionData._cache.has(path)) return importVersionData._cache.get(path);
   try {
     const dataRaw = readFileSync(path);
     const data = gunzipSync(dataRaw, { level: 2 }).toString("utf-8");
     const dataJson = JSON.parse(data);
+    importVersionData._cache.set(path, dataJson);
     return dataJson;
   }
   catch (error) {
     throw new Error("Cannot read version file '" + path + "'");
   }
 }
+importVersionData._cache = new Map();
 
 
 module.exports = require("./_real-index")(importVersionData);

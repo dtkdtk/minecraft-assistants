@@ -5,7 +5,6 @@ language: `ru_RU`
 Задачи, отмеченные галочкой в checkbox-е (MD: \[x]), в данный момент ВЫПОЛНЯЮТСЯ. Если задача отмечена и зачёркнута — она ВЫПОЛНЕНА.
 
 - [ ] Распорядок дня (работа, ланч, работа, отдых, сон)
-- [x] Перевести проект на английский язык
 - [ ] Специальная команда для просмотра логов (предупреждений). Будет диалоговое окно, что-то похожее на монитор состояния.
   Возможности:
   - [ ] Пагинация (распределение по страницам)
@@ -16,8 +15,6 @@ language: `ru_RU`
   - [ ] Возможность очистки списка предупреждений
   - [ ] (БУДУЩЕЕ) Информация о том, как исправить ошибку
 - [ ] Улучшить стабильность (глобальная обработка ошибок (чтобы бот не падал), больше проверок, обработка аварий / внештатных ситуаций)
-- [x] Система плагинов (внешних, user-editable)
-- [x] Упаковка кода в единый JS-скрипт (инструмент: esbuild)
 - [ ] Возможно сменить БД (на MongoDB / Redis)
 - [ ] Починить `mineflayer-pathfinder`, в частности - взаимодействие с дверьми
 - [ ] TerminalApp: настройки с пред-валидацией
@@ -51,12 +48,9 @@ language: `ru_RU`
 - [ ] launcher: Распознавание кода завершения дочернего процесса, возможно, он завершился с ошибкой
 - [ ] launcher: Отлов ошибок в дочернем процессе
 - [ ] launcher: Поддержка нескольких ботов (у каждого бота своё окно консоли и база данных)
-- [x] launcher: Динамическая загрузка данных о версиях; Пропатчить `minecraft-data/data.js`
-- [x] launcher: Авто-установка версии игры, если та не найдена (отлов исключения из `/src/launcher/_mcdata-provider.cjs`)
 - [ ] launcher (build): Сжатие и карты кода
 - [ ] launcher (build): Лицензионная информация в bundle
 - [ ] launcher: Проверка контрольных сумм каждой версии в `minecraft-data`
-- [x] launcher (build): Добавить предустановленные версии (minify JSON, сжатие в zip/zstd/tar-xz/etc.)
 - [ ] github: Добавить зеркало для minecraft-data; Собирать статистику установленных версий
 
 - [ ] brain: Разобраться с bot.on("spawn"); Перезагрузка модулей после смерти (?), вопросы сохранения состояния
@@ -89,20 +83,6 @@ language: `ru_RU`
 (контейнеризация???, система прав (ДА, СИСТЕМА ПРАВ МОДУЛЕЙ, чтоб не делали `rm -rf /` и не делали сливов каких-либо данных в Интернет) )
 ~~Также: Модули будут выделены из `/src/lib/ai/` в отдельную коренную папку: `/skills/`~~
 Будет возможность отключить модуль или настроить его. Короче говоря, совсем другой коленкор.
-
-- [ ] Сборка: починить краш релизной версии при игре на сервере 1.16.5.
-Возникает ошибка в недрах `prismarine-physics`:
-```
-E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:87476
-
-TypeError: block.shapes is not iterable
-    at getSurroundingBBs (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:87476:43)
-    at moveEntity (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:87537:32)
-    at moveEntityWithHeading (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:87836:11)
-    at Physics.physics.simulatePlayer (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:87986:9)
-    at tickPhysics (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:88143:19)
-    at Timeout.doPhysics [as _onTimeout] (E:\_projects\other-projects\minecraft-assistants\build\program\mca-bundle.cjs:88134:11)
-```
 
 - [ ] Интеграция Авто-обновления как часть лаунчера
 Без этого нельзя выпускать обновления
