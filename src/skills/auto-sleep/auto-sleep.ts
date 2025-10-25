@@ -36,7 +36,9 @@ class Mod_Sleep implements ty.IMcaSkill {
   readonly moduleName: string = MODULE_NAME;
   private timer: NodeJS.Timeout | undefined
   
-  constructor(private readonly B: ty.Brain) {}
+  constructor(private readonly B: ty.Brain) {
+    B.once("botSpawn", this.onGame.bind(this));
+  }
   
   async onGame() {
     await this.loadDatabaseDefaults();
@@ -122,6 +124,6 @@ class Mod_Sleep implements ty.IMcaSkill {
   }
 }
 
-mcaEnv.loadSkill(Mod_Sleep);
+//mcaEnv.loadSkill(Mod_Sleep);
 
 })();
