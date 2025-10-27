@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "lint": "npx eslint --cache",
-    "dev": "rm -r ./dist; cd ./src/skills; npx tsc; cd ../../; cd ./src/core; npx tsc --watch",
-    "build": "sh ./scripts/build.sh"
+    "dev": "rm -r ./dist; cd ./src/core; npx tsc; cd ../../; cd ./src/skills; npx tsc; cd ../../; cd ./src/core; npx tsc --watch",
+    "dev:windows-cmd": "call .\\scripts\\dev.bat",
+    "build": "sh ./scripts/build.sh",
+    "build:windows-cmd": "call .\\scripts\\build.bat"
   },
   "repository": {
     "type": "git",
