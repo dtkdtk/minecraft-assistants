@@ -70,7 +70,7 @@ class Mod_Farm implements ty.IMcaSkill {
   readonly moduleName = MODULE_NAME;
   
   constructor(private readonly B: ty.Brain) {
-    this.update();
+    B.once("botSpawn", () => this.update());
   }
 
   update() {
@@ -612,6 +612,6 @@ class Farm_Block implements ty.JobUnit {
   }
 }
 
-//mcaEnv.loadSkill(Mod_Farm);
+mcaEnv.loadSkill(Mod_Farm);
 
 })();

@@ -130,7 +130,7 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
           .catch(error => (this.#handleJobInvocationError(error), false));
       
       if (!stopped) {
-        if (invocationResult === true || (invocationResult === false && !JU.reExecuteAfterFail))
+        if (invocationResult === true || (invocationResult === false && (JU?.reExecuteAfterFail === false || JU?.reExecuteAfterFail === undefined)))
           this.jobs.shift();
         else if (invocationResult === null)
           this.jobs.shift(); //TODO: Do not remove the job from the queue if it (job) was interrupted
