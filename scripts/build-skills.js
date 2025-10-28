@@ -23,6 +23,7 @@ for await (const subdirName of originalDir) {
     console.error(`The 'dist/skills/${subdirName.name}/' must contain '${subdirName.name}.js' file.`);
     continue;
   }
-  exec(`npx esbuild "${entryFilePath}" --bundle --outfile="${bundlePath}" --format=iife --platform=neutral`,
+  const batchCallPrefix = process.argv[2] == "--WinBatch" ? "call " : "";
+  exec(batchCallPrefix + `npx esbuild "${entryFilePath}" --bundle --outfile="${bundlePath}" --format=iife --platform=neutral`,
     (E, stdout, stderr) => { process.stdout.write(stdout); process.stderr.write(stderr) });
 }
