@@ -17,9 +17,9 @@ App must be user-friendly (don't forget: Our target auditory is kids & teens) an
 ## Requirements
 
 - NodeJS v22+ (but the project is MAYBE compatible with v18)
-- Shell/Bash scripts support
-- (Optional) PowerShell
+- Shell/Bash (for windows: Batch) scripts support
 - (Test environment) Minecraft server (with no mods and `online-mode=false`)
+- 450+ MB of disk space *(yes, MCA dev env is fat)*
 
 ## Technical part
 
@@ -34,7 +34,7 @@ We are using some of JS libraries:
 
 For development:
 - `eslint` :: JS/TS code checker & linter
-- `esbuild` :: JS/TS code bundler (compress project to one file)
+- `esbuild` :: JS/TS code bundler (compress source code to one file)
 - `typescript` :: TypeScript language compiler
 
 ### Project structure
@@ -45,10 +45,12 @@ All source code is in the `/src/` directory.
   - `core/` :: Minecraft-assistants core. The bot. Provides control-panel, job management, data storing
   - `skills/` :: Bot skills, such as sleeping, eating, farming. Like plugins
 - `/scripts/`
-  - `full-build.sh` :: Build & bundle the application
+  - `build.sh` :: Build & bundle the application
+  - `build.bat` :: Windows version of `build.sh`
+  - `dev.bat` :: Windows version of `npm run dev`
 - `/test/`
-  - `pen-test/` :: Simply & fast development test (WITHOUT launcher)
-  - `prod-test/` :: Full production test (WITH launcher)
+  - `pen_test/` :: Simply & fast development test (WITHOUT launcher)
+  - `prod_test/` :: Full production test (WITH launcher)
 
 After build:
 - `/dist/` :: Compiled TypeScript code (from `/src/`)

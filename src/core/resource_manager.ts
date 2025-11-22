@@ -35,6 +35,11 @@ export class ResourceManager {
 }
 
 
+export class SkillResources {
+  get(resourceId: string) {}
+}
+
+
 function runSingleMapQuery<V extends object>(map: Map<string, V>, query: Partial<V>): string | undefined {
   const queryKeys = Object.keys(query) as (keyof typeof query)[];
   for (const [K, V] of map.entries())
