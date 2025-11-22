@@ -8,7 +8,6 @@ Minecraft bots that can do some of your routine work for you.
 # Requirements (environment & tools)
 
 - NodeJS v22 (or greater)
-- Shell/Bash scripts support
 
 
 

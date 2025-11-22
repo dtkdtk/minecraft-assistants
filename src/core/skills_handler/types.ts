@@ -134,15 +134,17 @@ export interface BotSkillMetadata {
 
 export type SkillIntent =
   /**
-   * Basic Node modules:
-   * - `node:util`
-   * - `node:util/types`
+   * Allow to import "vacuum" Node modules that haven't access to user's machine,
+   * like `node:stream`, `node:util`, `node:buffer`, etc.
+   * 
+   * These modules are safe, but they depend on the Node platform and cannot be imported
+   * inside other environments (not Node). Use them with awareness.
    */
   | "ImportBasicNodeModules"
   /**
-   * System Node modules:
-   * - `node:process`
-   * - `node:fs`
+   * Allow to import system Node modules, like `node:fs`, `node:net`, `node:process`, etc.
+   * 
+   * These modules are destructive and could destroy the user's machine, or violate privacy.
    */
   | "ImportSystemNodeModules"
 ;
@@ -197,6 +199,5 @@ export class InvalidManifestError extends SkillError {
 export function skillId_From(skillMf: SkillManifest): string {
   const author = skillMf.authorId;
   const name = skillMf.nameId;
-  const version = skillMf.version;
-  return [author, name, version.join(".")].join(":");
+  return [author, name].join(".");
 }

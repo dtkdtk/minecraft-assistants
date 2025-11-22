@@ -187,7 +187,7 @@ export class Brain extends TypedEventEmitter<BrainEventsMap> {
       current.promisePause = promisePause;
       await current.finalize?.().catch(() => {});
     }
-    await this.#invokeJob(J).catch(() => this.#handleJobInterruption(J));
+    await this.#invokeJob(J).catch(E => this.#handleJobInvocationError(E));
     if (J.promisePause) await J.promisePause;
     unpauseFn?.();
   }

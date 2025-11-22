@@ -29,6 +29,7 @@ cp -r ./src/launcher/program ./build/program
 cp -r ./dist/compressed-mcdata/pc ./build/repository/game-versions/pc
 cp -r ./dist/skills_flat ./build/skills
 cp ./Release_README.md ./build/README.md
+cp ./src/launcher/START.bat ./build/START.bat
 cp ./LICENSE ./build/LICENSE
 cp ./package.json ./build/program/package.json
 cp ./dist/mcversions-index.json ./build/program/

@@ -1,1 +1,1 @@
-cd ../../ ; node ./scripts/build-skills.js ; cd -
+cd ../../ ; node ./scripts/build-skills.js ; cd - > /dev/null

@@ -9,9 +9,9 @@
     "resolveJsonModule": true,
 
     "removeComments": true,
-    "module": "NodeNext",
+    "module": "Node18",
     "moduleResolution": "nodenext",
-    "lib": ["ESNext"],
-    "target": "es2020"
+    "lib": ["ES2022"],
+    "target": "es2022"
   }
 }

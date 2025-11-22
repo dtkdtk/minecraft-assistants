@@ -30,6 +30,7 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-namespace": "off",
       "no-unused-private-class-members": "off",
+      "no-promise-executor-return": ["warn", { allowVoid: true }],
     }
   },
 ]);

@@ -30,6 +30,7 @@ rem Bundle launcher
 @xcopy /E /I /Y .\dist\compressed-mcdata\pc .\build\repository\game-versions\pc > nul
 @xcopy /E /I /Y .\dist\skills_flat .\build\skills > nul
 @copy /Y .\Release_README.md .\build\README.md > nul
+@copy /Y .\src\launcher\START.bat .\build\START.bat > nul
 @copy /Y .\LICENSE .\build\LICENSE > nul
 @copy /Y .\package.json .\build\program\package.json > nul
 @copy /Y .\dist\mcversions-index.json .\build\program\mcversions-index.json > nul

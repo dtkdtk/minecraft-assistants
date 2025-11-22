@@ -8,7 +8,8 @@
     "dev": "rm -r ./dist; cd ./src/core; npx tsc; cd ../../; cd ./src/skills; npx tsc; cd ../../; cd ./src/core; npx tsc --watch",
     "dev:windows-cmd": "call .\\scripts\\dev.bat",
     "build": "sh ./scripts/build.sh",
-    "build:windows-cmd": "call .\\scripts\\build.bat"
+    "build:windows-cmd": "call .\\scripts\\build.bat",
+    "test": "node ./test/unit/_all.test.js"
   },
   "repository": {
     "type": "git",
@@ -31,7 +32,7 @@
     "@eslint/compat": "^1.4.0",
     "@eslint/js": "^9.31.0",
     "@types/ini": "^4.1.1",
-    "@types/node": "^24.9.0",
+    "@types/node": "^18",
     "esbuild": "^0.25.11",
     "eslint": "9.34",
     "globals": "^16.4.0",
