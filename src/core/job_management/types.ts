@@ -3,7 +3,7 @@ export type ActualityCheckCb = () => boolean;
 /**
  * Unit of work. Job.
  */
-export interface IJob {
+export interface AnyJob {
   /**
    * System ID of the job.
    * If NOT 'null' is specified, the job becomes unique, and can only exist in the job queue in a single instance

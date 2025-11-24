@@ -46,38 +46,6 @@ export type CompletedGeneralBotOptions = GeneralBotOptions & Required<OptionalBo
 export type Bot = mf.Bot;
 export type BotEvents = mf.BotEvents;
 
-/* I always remember the farm. Great for visualizing jobs.
-
-  Aggregate job: Work
-  Sub-jobs: Sow wheat (x60, each block = each sub-job)
-  
-  Aggregate job:
-  prepare(): Go to chest, Take seeds from chest, Take hoe
-  Only executed when starting an aggregate job (not min.un.work)
-  finalize(): Put seeds and hoe in chest
-  Executed when completing an aggregate job (regardless of whether there are min.un.work remaining)
-  
-  Sub-jobs:
-  validate(): Is the field already sown?
-  Note: This is just for logical separation; it is perfectly fine to omit the checks in `execute()`,
-  but then `prepare()` will still execute even if the job is already completed.
-  execute(): Go here, Take seeds in hand, Use on arable land
-*/
-
-/**
- * A set of jobs. Divided into minimal units of work.
- * The set may be heterogeneous (contain different jobs).
- *
- * `.execute()` executes one minimal unit of work.
- */
-export interface AggregateJob extends JobUnit {
-  /** The index of the currently executing job. */
-  cursor: number;
-  /** Set of simple jobs. */
-  jobs: JobUnit[];
-}
-export type Job = JobUnit | AggregateJob;
-
 export enum LocationType {
   /** A single point. */
   Point,

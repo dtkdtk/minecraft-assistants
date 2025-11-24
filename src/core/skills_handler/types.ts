@@ -81,7 +81,6 @@ export interface SkillEnvironment {
   requireRestricted(mod: "node:os"): Promise<typeof import("node:os")>;
   requireRestricted(mod: "node:module"): Promise<typeof import("node:module")>;
   requireRestricted(mod: "node:inspector"): Promise<typeof import("node:inspector")>;
-  requireRestricted(mod: "node:inspector/promises"): Promise<typeof import("node:inspector/promises")>;
   requireRestricted(mod: "node:http"): Promise<typeof import("node:http")>;
   requireRestricted(mod: "node:http2"): Promise<typeof import("node:http2")>;
   requireRestricted(mod: "node:https"): Promise<typeof import("node:https")>;

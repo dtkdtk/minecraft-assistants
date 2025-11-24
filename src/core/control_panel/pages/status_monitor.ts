@@ -1,3 +1,4 @@
+/*
 import type { Key } from "readline";
 import { styleText } from "util";
 import type Brain from "../../brain.js";
@@ -73,3 +74,4 @@ function _displayJobs(jobs: readonly Job[], depth = 1): string {
     ? prefix + `@ (${i + 1}) ${j.jobDisplayName} [Done ${j.cursor + 1}/${j.jobs.length}]\n` + _displayJobs(j.jobs, depth + 1)
     : prefix + `- (${i + 1}) ${j.jobDisplayName}`).join("\n");
 }
+*/

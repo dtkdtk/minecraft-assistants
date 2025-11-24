@@ -1,45 +1,45 @@
 import { InfLoopFuse } from "../lib/infloop_fuse.js";
-import type { ActualityCheckCb, IJob } from "./types.js";
+import type { ActualityCheckCb, AnyJob } from "./types.js";
 
 const kJobWatermark = Symbol();
-const getWatermark = (job: IJob) => Reflect.get(job, kJobWatermark);
-const resetWatermark = (job: IJob) => Reflect.set(job, kJobWatermark, null);
-const updateWatermark = (job: IJob) => {
+const getWatermark = (job: AnyJob) => Reflect.get(job, kJobWatermark);
+const resetWatermark = (job: AnyJob) => Reflect.set(job, kJobWatermark, null);
+const updateWatermark = (job: AnyJob) => {
   const wm = Symbol();
   Reflect.set(job, kJobWatermark, wm);
   return wm;
 }
 
 export class JobManager {
-  #queue: IJob[] = [];
+  #queue: AnyJob[] = [];
   #currentExecutor?: Promise<void>;
-  #currentJob?: IJob;
+  #currentJob?: AnyJob;
 
-  add(job: IJob): void {
+  add(job: AnyJob): void {
     resetWatermark(job);
     const interrupt = this.#queue.length > 0 && job.priority > this.#queue[0].priority;
     this.#queue.push(job);
     this.#queue.sort((A, B) => B.priority - A.priority);
     this.#initExecution(interrupt);
   }
-  async terminate(job: IJob): Promise<boolean> {
+  async terminate(job: AnyJob): Promise<boolean> {
     if (!this.exists(job)) return false;
     await this.#finalizeJob(job, true);
     return true;
   }
-  exists(job: IJob): boolean {
+  exists(job: AnyJob): boolean {
     return this.#queue.includes(job);
   }
 
 
-  #removeFromQueue(job: IJob): boolean {
+  #removeFromQueue(job: AnyJob): boolean {
     const index = this.#queue.indexOf(job);
     if (index === -1) return false;
     this.#queue.splice(index, 1);
     return true;
   }
 
-  async #invokeJob(job: IJob) {
+  async #invokeJob(job: AnyJob) {
     this.#currentJob = job;
     const watermark = updateWatermark(job);
 
@@ -89,12 +89,12 @@ export class JobManager {
     }
   }
 
-  #createCheckerCb(job: IJob, neededWatermark: symbol): ActualityCheckCb {
+  #createCheckerCb(job: AnyJob, neededWatermark: symbol): ActualityCheckCb {
     return () => {
       return this.#queue.includes(job) && (getWatermark(job) === neededWatermark);
     };
   }
-  async #finalizeJob(job: IJob, removeFromQueue: boolean = false,
+  async #finalizeJob(job: AnyJob, removeFromQueue: boolean = false,
     returnErrorsInsteadHandling: boolean = false
   ) {
     resetWatermark(job);
