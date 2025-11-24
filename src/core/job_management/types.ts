@@ -24,7 +24,7 @@ export interface IJob {
   /** Must stop job execution & remove side-effects */
   finalize(): void | Promise<void>;
   /** Handle (log/report/...) unexpected job execution error */
-  handleError(error: unknown): Promise<void>;
+  handleError(error: unknown): void | Promise<void>;
 }
 
 /** Higher priority = better. */
