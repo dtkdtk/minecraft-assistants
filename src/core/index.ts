@@ -1,5 +1,6 @@
 export * from "./lib/actqueue.js";
 export * from "./lib/durat.js";
+export * from "./lib/infloop_fuse.js";
 export * from "./lib/typed_emitter.js";
 
 export * from "./skills_handler/types.js";
