@@ -1,4 +1,4 @@
-import { type SomeFunction } from "../auxiliary.js";
+import { type SomeFunction } from "../types.js";
 
 /**
  * Action queue. Performs specified actions evenly, at equal time intervals.

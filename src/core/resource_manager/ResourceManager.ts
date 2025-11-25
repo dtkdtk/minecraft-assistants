@@ -1,5 +1,4 @@
-import { SkillManifest, type BotSkillMetadata } from "./skills_handler/types.js";
-import { RestrictedAccessViolation } from "./types.js";
+import { type BotSkillMetadata, RestrictedAccessViolation, type SkillManifest } from "../index.js";
 
 export class ResourceManager {
   /** TODO: document */

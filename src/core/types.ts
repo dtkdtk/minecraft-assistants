@@ -55,6 +55,7 @@ export enum LocationType {
   Region,
   /* TODO: AggregateArea (several areas), AggregateRegion (several regions) */
 }
+
 /** A single point in the world. */
 export interface LocationPoint {
   /** System name of the point. */
@@ -94,18 +95,6 @@ export interface LocationRegion {
 export type Location = LocationPoint | LocationArea | LocationRegion;
 
 
-
-/** Internal database types. */
-export namespace DatabaseTypes {
-  export type KnownModuleNames = "Mod_ChatCommands" | "Mod_Eat" | "Mod_Sleep" | "Mod_Farm";
-  export type LocationsDatabase = {
-    _id: KnownModuleNames; /* module name */
-    locations: Location[];
-  };
-}
-
-
-
 export class SecurityViolation extends Error {
   constructor(details?: string) {
     super("The program detected internal security violation."
@@ -125,3 +114,7 @@ export class AccessDeniedError extends SecurityViolation {
     super(message);
   }
 }
+
+export type Assert<Got, Needed> = Got extends Needed ? Got : never;
+export type SomeFunction = () => unknown;
+export type AnyFunction = (...args: any[]) => any;

@@ -1,6 +1,6 @@
 //Source: https://www.npmjs.com/package/typed-emitter
 import EventEmitter from "node:events";
-import { type Assert } from "../auxiliary.js";
+import { type Assert } from "../types.js";
 
 type _ListenerFn<Events extends object, E extends keyof Events> =
   Assert<Events[E], (...params: any[]) => any>;

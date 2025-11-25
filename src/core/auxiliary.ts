@@ -1,9 +1,6 @@
-import type * as Nedb from "@seald-io/nedb";
 import "./lib/actqueue.js";
 import "./lib/durat.js";
 import "./lib/typed_emitter.js";
-import type { DatabaseTypes } from "./types.js";
-type Datastore<Schema = Record<string, any>> = Nedb.default<Schema>;
 
 export function debugLog(message: string): void {
   if (debugLog.enableDebug)
@@ -30,15 +27,3 @@ export function stringifyCoordinates(
   }
   return "<incorrect-coordinates>";
 }
-
-export const DB: {
-  common: Datastore,
-  locations: Datastore<DatabaseTypes.LocationsDatabase>,
-} = {
-  common: undefined!,
-  locations: undefined!,
-};
-
-export type Assert<Got, Needed> = Got extends Needed ? Got : never;
-export type SomeFunction = () => unknown;
-export type AnyFunction = (...args: any[]) => any;

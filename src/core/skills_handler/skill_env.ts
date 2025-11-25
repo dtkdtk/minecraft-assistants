@@ -63,7 +63,6 @@ const VirtualSystemNodeImports: VirtualImportsMapObj = {
   "node:os": () => import("node:os"),
   "node:module": () => import("node:module"),
   "node:inspector": () => import("node:inspector"),
-  "node:inspector/promises": () => import("node:inspector/promises"),
   "node:http": () => import("node:http"),
   "node:http2": () => import("node:http2"),
   "node:https": () => import("node:https"),
