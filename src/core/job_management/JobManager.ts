@@ -44,11 +44,17 @@ export class JobManager {
     const watermark = updateWatermark(job);
 
     const checkActuality = this.#createCheckerCb(job, watermark);
-    let isActual = true, thrownError: unknown = undefined;
+    let isActual = true, isError = false;
     try {
       let toContinue: boolean;
       toContinue = await job.prepare(checkActuality);
       isActual = checkActuality();
+      if (!toContinue) {
+        await this.#finalizeJob(job, true);
+        this.#currentJob = undefined;
+        this.#initExecution();
+        return;
+      }
       const { fuseIncrement, fuseOk } = new InfLoopFuse(true);
       while (isActual && toContinue && fuseOk()) {
         toContinue = !(await job.execute(checkActuality));
@@ -56,13 +62,14 @@ export class JobManager {
         fuseIncrement();
       }
     }
-    catch (E) { thrownError = E }
+    catch (error) {
+      isError = true;
+      this.#removeFromQueue(job);
+      job.handleError(error)?.catch(() => {});
+    }
     isActual = checkActuality();
     if (!isActual) return;
-
-    thrownError = this.#finalizeJob(job, true, true) ?? thrownError;
-    if (thrownError) job.handleError(thrownError)?.catch(() => {});
-    
+    if (!isError) await this.#finalizeJob(job, true);
     this.#currentJob = undefined;
     this.#initExecution();
   }
@@ -94,16 +101,13 @@ export class JobManager {
       return this.#queue.includes(job) && (getWatermark(job) === neededWatermark);
     };
   }
-  async #finalizeJob(job: AnyJob, removeFromQueue: boolean = false,
-    returnErrorsInsteadHandling: boolean = false
-  ) {
+  async #finalizeJob(job: AnyJob, removeFromQueue: boolean = false) {
     resetWatermark(job);
     let error = undefined;
     await Promise.resolve(job.finalize?.())
       .catch(E => error = E);
-    if (removeFromQueue) this.#removeFromQueue(job);
-    if (!returnErrorsInsteadHandling) job?.handleError(error)?.catch(() => {});
-    else return error;
+    if (removeFromQueue || error) this.#removeFromQueue(job);
+    if (error) job?.handleError(error)?.catch(() => {})
   }
 }
 

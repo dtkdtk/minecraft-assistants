@@ -385,27 +385,31 @@ describe("job management (JobManager)", () => {
   testCase("rapid add/terminate race condition", async (testCtx) => {
     const stepper = new ChronologicalStepper();
     const manager = new JobManager();
-    const J = new JobA();
-    J.__step = stepper.createFn(J);
+    const A = new JobA();
+    const B = new JobB();
+    A.__step = stepper.createFn(A);
+    B.__step = stepper.createFn(B);
     const E = (msg) =>
       ctxErr(msg, {
-        results: J.__resultsArray,
+        A: A.__resultsArray,
+        B: B.__resultsArray,
         chronology: stepper.steps,
       });
+    B.priority = A.priority;
 
-    manager.add(J);
-    const terminatePromise = manager.terminate(J);
-    manager.add(J);
+    manager.add(A);
+    const terminatePromise = manager.terminate(A);
+    manager.add(B);
 
     const terminated = await terminatePromise;
 
     assert(terminated === true, E("Terminate should succeed"));
     assert(
-      manager.exists(J) === true,
+      manager.exists(A) === true,
       E("Job should be in queue after re-add")
     );
 
-    const prepareCalls = J.__resultsArray.filter((x) =>
+    const prepareCalls = A.__resultsArray.filter((x) =>
       x.startsWith("prepare")
     ).length;
     assert(
@@ -513,7 +517,7 @@ describe("job management (JobManager)", () => {
     class FalsePrepareJob extends JobA {
       prepare(isActual) {
         this.__step("prepare : " + isActual());
-        return true; // Indicates job should be removed
+        return false; // Indicates job should be removed
       }
     }
 
