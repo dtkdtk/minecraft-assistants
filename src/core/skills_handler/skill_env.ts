@@ -14,7 +14,7 @@ import {
 type VirtualImportsMapObj = Record<string, () => Promise<any>>;
 
 const VirtualCoreImports: VirtualImportsMapObj = {
-  "core": () => import("../index.js"),
+  "core": () => import("../index_restricted.js"),
 };
 
 const VirtualTrustedImports: VirtualImportsMapObj = {

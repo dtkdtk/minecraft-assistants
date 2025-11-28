@@ -1,12 +1,17 @@
-import { type BotSkillMetadata, RestrictedAccessViolation, type SkillManifest } from "../index.js";
+import { type CoreContext } from "../coreContext.js";
+import { RestrictedAccessViolation, type BotSkillMetadata, type SkillManifest } from "../index.js";
+
+/* De-restriction keys */
+const DK_skills = Symbol();
+const DK_querySkillData = Symbol();
 
 export class ResourceManager {
   /** TODO: document */
-  #rootKey: symbol;
+  #ctx: CoreContext;
   #skills = new Map<string, BotSkillMetadata>();
 
-  constructor(rootKey: symbol) {
-    this.#rootKey = rootKey;
+  constructor(ctx: CoreContext) {
+    this.#ctx = ctx;
   }
 
   getSkill(skillId: string) {
@@ -15,10 +20,6 @@ export class ResourceManager {
   querySkillId(query: Partial<BotSkillMetadata>) {
     return runSingleMapQuery(this.#skills, query);
   }
-  querySkillData(query: Partial<BotSkillMetadata>) {
-    const K = this.querySkillId(query);
-    return K ? this.#skills.get(K) : undefined;
-  }
   querySkillManifest(query: Partial<SkillManifest>) {
     const queryKeys = Object.keys(query) as (keyof SkillManifest)[];;
     for (const {manifest} of this.#skills.values()) {
@@ -26,16 +27,28 @@ export class ResourceManager {
       if (queryResult) return manifest;
     }
   }
-  ["derestrict:skills"] (rootKey: symbol) {
-    if (rootKey !== this.#rootKey)
+  #querySkillData(query: Partial<BotSkillMetadata>) {
+    const K = this.querySkillId(query);
+    return K ? this.#skills.get(K) : undefined;
+  }
+
+  static readonly DK_skills: typeof DK_skills = DK_skills;
+  [DK_skills](trustKey: symbol) {
+    if (trustKey !== this.#ctx.trustKey)
       throw new RestrictedAccessViolation(ResourceManager.name, "#skills");
-    else return this.#skills;
+    return this.#skills;
+  }
+  static readonly DK_querySkillData: typeof DK_querySkillData = DK_querySkillData;
+  [DK_querySkillData](trustKey: symbol) {
+    if (trustKey !== this.#ctx.trustKey)
+      throw new RestrictedAccessViolation(ResourceManager.name, "#querySkillData");
+    return this.#querySkillData.bind(this);
   }
 }
 
 
 export class SkillResources {
-  get(resourceId: string) {}
+  get() {}
 }
 
 

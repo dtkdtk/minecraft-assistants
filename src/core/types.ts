@@ -103,7 +103,7 @@ export class SecurityViolation extends Error {
 }
 export class RestrictedAccessViolation extends SecurityViolation {
   constructor(className: string, memberName: string) {
-    super(`${className}.${memberName} requires a friendKey to grant access`);
+    super(`${className}.${memberName} de-restriction requires a trust-key to grant access`);
   }
 }
 export class AccessDeniedError extends SecurityViolation {
@@ -118,3 +118,10 @@ export class AccessDeniedError extends SecurityViolation {
 export type Assert<Got, Needed> = Got extends Needed ? Got : never;
 export type SomeFunction = () => unknown;
 export type AnyFunction = (...args: any[]) => any;
+export type Primitive = number | string | boolean | null
+export type Serializable =
+  | Primitive
+  | Primitive[]
+  | { [x: string]: Serializable }
+  | { [x: string]: Serializable }[]
+export type SerializableObj = Record<string, Serializable>

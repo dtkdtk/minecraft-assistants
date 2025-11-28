@@ -303,12 +303,12 @@ describe("job management (JobManager)", () => {
       (x) => x === "finalize end"
     ).length;
     assert(
-      finalizeStarts === 2,
-      E(`jobA should start finalization twice, got ${finalizeStarts}`)
+      finalizeStarts === 1,
+      E(`jobA should start finalization once, got ${finalizeStarts}`)
     );
     assert(
-      finalizeEnds === 2,
-      E(`jobA should end finalization twice, got ${finalizeEnds}`)
+      finalizeEnds === 1,
+      E(`jobA should end finalization once, got ${finalizeEnds}`)
     );
 
     // Verify jobB executed successfully
@@ -405,17 +405,21 @@ describe("job management (JobManager)", () => {
 
     assert(terminated === true, E("Terminate should succeed"));
     assert(
-      manager.exists(A) === true,
-      E("Job should be in queue after re-add")
+      manager.exists(A) === false,
+      E("Terminated job should not be in queue")
+    );
+    assert(
+      manager.exists(B) === true,
+      E("New job should be in queue after adding")
     );
 
-    const prepareCalls = A.__resultsArray.filter((x) =>
-      x.startsWith("prepare")
+    const executeCalls = A.__resultsArray.filter((x) =>
+      x.startsWith("execute")
     ).length;
     assert(
-      prepareCalls === 0,
+      executeCalls === 0,
       E(
-        `Job should not be executed during race, got ${prepareCalls} prepare calls`
+        `Job should not be executed during race, got ${executeCalls} execute calls`
       )
     );
   });

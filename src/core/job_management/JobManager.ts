@@ -1,6 +1,8 @@
 import { InfLoopFuse } from "../lib/infloop_fuse.js";
+import type { Logger } from "../lib/logger.js";
 import type { ActualityCheckCb, AnyJob } from "./types.js";
 
+const kFinalizationPromise = Symbol();
 const kJobWatermark = Symbol();
 const getWatermark = (job: AnyJob) => Reflect.get(job, kJobWatermark);
 const resetWatermark = (job: AnyJob) => Reflect.set(job, kJobWatermark, null);
@@ -14,13 +16,16 @@ export class JobManager {
   #queue: AnyJob[] = [];
   #currentExecutor?: Promise<void>;
   #currentJob?: AnyJob;
+  logger?: Logger;
 
   add(job: AnyJob): void {
-    resetWatermark(job);
-    const interrupt = this.#queue.length > 0 && job.priority > this.#queue[0].priority;
-    this.#queue.push(job);
-    this.#queue.sort((A, B) => B.priority - A.priority);
-    this.#initExecution(interrupt);
+    if (this.exists(job)) {
+      if (Reflect.get(job, kFinalizationPromise) instanceof Promise)
+        Reflect.get(job, kFinalizationPromise).then(() => this.#checkedAdd(job));
+      else if (this.logger)
+        this.logger.logDevWarn("Cannot add new job because it is already exists", { job: job as any });
+    }
+    else this.#checkedAdd(job);
   }
   async terminate(job: AnyJob): Promise<boolean> {
     if (!this.exists(job)) return false;
@@ -37,6 +42,13 @@ export class JobManager {
     if (index === -1) return false;
     this.#queue.splice(index, 1);
     return true;
+  }
+  #checkedAdd(job: AnyJob): void {
+    resetWatermark(job);
+    const interrupt = this.#queue.length > 0 && job.priority > this.#queue[0].priority;
+    this.#queue.push(job);
+    this.#queue.sort((A, B) => B.priority - A.priority);
+    this.#initExecution(interrupt);
   }
 
   async #invokeJob(job: AnyJob) {
@@ -77,6 +89,8 @@ export class JobManager {
   async #initExecution(interrupt: boolean = false) {
     //new job must be added to queue
     if (this.#queue.length == 0) return;
+    if (this.#currentJob && Reflect.get(this.#currentJob, kFinalizationPromise) instanceof Promise)
+      await Reflect.get(this.#currentJob, kFinalizationPromise).catch(() => {});
     if (interrupt && this.#currentJob) {
       //Watermark reset; job execution will be stopped, finalized,
       // but NOT removed from queue
@@ -104,8 +118,11 @@ export class JobManager {
   async #finalizeJob(job: AnyJob, removeFromQueue: boolean = false) {
     resetWatermark(job);
     let error = undefined;
-    await Promise.resolve(job.finalize?.())
+    const finProcess = Promise.resolve(job.finalize?.())
       .catch(E => error = E);
+    Reflect.set(job, kFinalizationPromise, finProcess);
+    await finProcess;
+    Reflect.deleteProperty(job, kFinalizationPromise);
     if (removeFromQueue || error) this.#removeFromQueue(job);
     if (error) job?.handleError(error)?.catch(() => {})
   }

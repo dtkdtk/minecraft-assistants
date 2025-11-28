@@ -28,7 +28,7 @@ export interface SkillEnvironment {
    * Must be used instead of official module systems (ESM/CJS/AMD/etc.)
    * @throws {SkillIsNotDefined | MissingIntent}
    */
-  require(mod: "core"): Promise<typeof import("../index.js")>;
+  require(mod: "core"): Promise<typeof import("../index_restricted.js")>;
 
   require(mod: "mineflayer"): Promise<typeof import("mineflayer")>;
   require(mod: "mineflayer-pathfinder"): Promise<typeof import("mineflayer-pathfinder")>;

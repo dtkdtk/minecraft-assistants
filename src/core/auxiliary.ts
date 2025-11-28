@@ -2,12 +2,6 @@ import "./lib/actqueue.js";
 import "./lib/durat.js";
 import "./lib/typed_emitter.js";
 
-export function debugLog(message: string): void {
-  if (debugLog.enableDebug)
-    console.debug("[DEBUG]", message);
-}
-debugLog.enableDebug = false;
-
 export function stringifyCoordinates(
   coordsLike: { x?: number, y?: number, z?: number }
     | [x:number, y:number, z:number]

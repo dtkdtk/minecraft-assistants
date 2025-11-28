@@ -1,13 +1,12 @@
-import { default as Nedb } from "@seald-io/nedb";
+import { default as loadMinecraftData } from "minecraft-data";
 import * as mf from "mineflayer";
 import { pathfinder } from "mineflayer-pathfinder";
-import { join as joinPath } from "node:path";
 import { setupCommandLineInterface } from "./control_panel/terminal_app.js";
+import { CoreContext } from "./coreContext.js";
 import {
-  Brain, DB, debugLog, Durat, type CompletedGeneralBotOptions,
+  Brain, Durat, type CompletedGeneralBotOptions,
   type GeneralBotOptions, type OptionalBotOptions
 } from "./index.js";
-import { default as loadMinecraftData } from "minecraft-data";
 
 const defaultOptions: Required<OptionalBotOptions> = {
   databaseAutosaveInterval: Durat({ min: 3 }),
@@ -16,12 +15,16 @@ const defaultOptions: Required<OptionalBotOptions> = {
   enableDebug: false,
   interactiveCli: false,
 };
-const kRootKey = Symbol("ROOT_KEY");
+let ctx: CoreContext;
 
 
 export async function createMinecraftAssistantBot(inputOptions: GeneralBotOptions) {
+  ctx = new CoreContext();
+  ctx.coreLogger.logInfo("Loading MCA core...");
+  initProcessExitHandlers();
+  
   const options: CompletedGeneralBotOptions = { ...defaultOptions, ...inputOptions };
-  debugLog.enableDebug = options.enableDebug;
+  ctx.isDebug = options.enableDebug;
   let preloadingProcess: Promise<void> | undefined;
   if (options.gameVersion) preloadingProcess = preloadGameVersion(options.gameVersion);
   initDatabases(options);
@@ -31,22 +34,36 @@ export async function createMinecraftAssistantBot(inputOptions: GeneralBotOption
 
   await preloadingProcess;
   const bot = mf.createBot({ ...options, ...inputOptions._mfClientOptionsOverrides });
-  const brain = new Brain(bot, options, kRootKey);
+  ctx.brain = new Brain(bot, options, ctx);
   bot.once("spawn", () => {
     bot.loadPlugin(pathfinder);
-    if (inputOptions.interactiveCli) setupCommandLineInterface(brain);
+    if (inputOptions.interactiveCli) setupCommandLineInterface(ctx.brain!);
   });
 }
 
 function initDatabases(options: CompletedGeneralBotOptions) {
-  const DataStore = Nedb as unknown as typeof Nedb.default;
-  DB.common = new DataStore({ filename: joinPath(options.databaseDirPath, "common.db"), autoload: true });
-  DB.locations = new DataStore({ filename: joinPath(options.databaseDirPath, "locations.db"), autoload: true });
+  //TODO
 }
 
 function preloadGameVersion(version: string) {
+  ctx.coreLogger.logDebug(`Preloading [%s] version`, {}, [version])
   return new Promise<void>((pReturn) => {
     loadMinecraftData(version);
     pReturn();
   });
+}
+
+function initProcessExitHandlers() {
+  async function exit() {
+    process.off("exit", exit);
+    await ctx.exitProcess();
+  }
+  function exitWithWarn() {
+    const error = new Error();
+    ctx.coreLogger.logDevWarn("Wrong exit! Use [coreCtx.exitProcess()] instead of [process.exit()]",
+      { stack: error.stack ?? null });
+    exit();
+  }
+  process.once("SIGINT", exit);
+  process.once("exit", exitWithWarn);
 }
