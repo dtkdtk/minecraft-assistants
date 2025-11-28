@@ -2,6 +2,10 @@
 
 Minecraft bots that can do some of your routine work for you.
 
+> [!IMPORTANT]\
+> **Currently, we are not working on this project.**
+> **But we are open for new contributions & new developers.**
+
 > [!WARNING]\
 > Current status: **IN DEVELOPMENT** (not ready for use)
 
